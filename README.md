@@ -12,7 +12,7 @@ No build step, no frameworks. Plain HTML, CSS and JavaScript, plus the Firebase 
   - Admin creates a game (name, Normal or Chip mode, target score) and gets a 5-character join code (no ambiguous characters, checked to be unused). The admin plays too.
   - Players join with a name and the code. Late joiners get `5 + 2 x current round` chips in Chip mode.
   - Each player taps the cards they hold and the score is calculated live, for example `Score 33 x 3 = 99 points`. Scores can be resent until the round closes.
-  - Admin closes the round (`Close round (n/total sent)`).
+  - Admin closes the round (`Close round (n/total sent)`), or ends the game early with **End this game** if nobody has reached the target.
   - When a game finishes, the admin can start a **new game with the same code and players**. The finished game is saved under *Past games*, with a win tally.
 - **Scoreboard** tab: a read-only live view of one game (opened from the Admin tab).
 - **Admin** tab: lists every game created on this device, with *View* and *Forget*.

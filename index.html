@@ -481,7 +481,7 @@ function patchGame(d, me, isAdmin, finished, winner, chip) {
 
   // banner
   let b = "";
-  if (finished) b = `<div class="banner">★ ${esc(winner.name)} wins with ${winner.total} points!${isAdmin ? "" : `<br><small style="font:600 .75rem system-ui;letter-spacing:0">Waiting for the admin to start the next game.</small>`}</div>`;
+  if (finished) b = finishedBannerHtml(meta, d, !isAdmin);
   else if (meta.tie) b = `<div class="banner tie">Top score tied – play one more round.</div>`;
   $("#g-banner").innerHTML = b;
 
@@ -495,8 +495,9 @@ function patchGame(d, me, isAdmin, finished, winner, chip) {
   const adm = $("#g-admin");
   if (isAdmin && !finished) {
     if (!adm.firstChild) {
-      adm.innerHTML = `<button class="btn danger" id="b-close"></button>`;
+      adm.innerHTML = `<button class="btn danger" id="b-close"></button><button class="btn ghost" id="b-end">End this game</button>`;
       $("#b-close").onclick = closeRound;
+      $("#b-end").onclick = endGame;
     }
     $("#b-close").textContent = `Close round (${d.sent}/${d.rows.length} sent)`;
   } else if (isAdmin && finished) {
@@ -660,6 +661,25 @@ async function sendScore() {
   } catch (e) { S.msg = { t: "err", m: e.message }; S.calcKey = null; renderBoard(); }
 }
 
+function finishedBannerHtml(meta, d, showWaiting) {
+  const top = d.rows[0]; if (!top) return "";
+  const lead = d.rows.filter(x => x.total === top.total).map(x => esc(x.name));
+  const text = meta.endedEarly
+    ? `Game ended early. ${lead.length > 1 ? "Tied lead: " + lead.join(", ") : "Leader: " + esc(top.name)} with ${top.total} points.`
+    : `★ ${esc(top.name)} wins with ${top.total} points!`;
+  return `<div class="banner${meta.endedEarly ? " tie" : ""}">${text}${showWaiting ? `<br><small style="font:600 .75rem system-ui;letter-spacing:0">Waiting for the admin to start the next game.</small>` : ""}</div>`;
+}
+
+/* ---------- admin: end the game early ---------- */
+async function endGame() {
+  const meta = S.game.meta;
+  if (meta.adminId !== S.session.pid || meta.status !== "playing") return;
+  if (!confirm("End this game now? Nobody has reached the target. Scores of the open round (not closed yet) are not counted.")) return;
+  try {
+    await db.ref(`games/${S.session.code}/meta`).update({ status: "finished", tie: false, endedEarly: true });
+  } catch (e) { flash("err", e.message); }
+}
+
 /* ---------- admin: remove a player ---------- */
 async function removePlayer(pid, name) {
   const g = S.game, meta = g.meta;
@@ -695,12 +715,12 @@ function pastGamesHtml(history) {
   const list = Object.values(history || {}).sort((a, b) => b.gameNo - a.gameNo);
   if (!list.length) return "";
   const wins = {};
-  list.forEach(h => { const w = wins[h.winnerId] || (wins[h.winnerId] = { name: h.winnerName, n: 0 }); w.n++; });
+  list.filter(h => !h.endedEarly).forEach(h => { const w = wins[h.winnerId] || (wins[h.winnerId] = { name: h.winnerName, n: 0 }); w.n++; });
   const tally = Object.values(wins).sort((a, b) => b.n - a.n).map(w => `${esc(w.name)} ${w.n}`).join(" · ");
-  return `<p><b>Wins:</b> ${tally}</p>` + list.map(h => {
+  return (tally ? `<p><b>Wins:</b> ${tally}</p>` : "") + list.map(h => {
     const results = h.results || {}, st = h.standings || [];
     const rounds = Object.keys(results).sort((a, b) => a.slice(1) - b.slice(1));
-    return `<details class="past" data-g="${h.gameNo}"><summary>Game ${h.gameNo} · ★ ${esc(h.winnerName)} ${st[0] ? st[0].total : ""} · ${h.mode === "chip" ? "Chip" : "Normal"} · target ${h.target}</summary>
+    return `<details class="past" data-g="${h.gameNo}"><summary>Game ${h.gameNo} · ${h.endedEarly ? "ended early, leader" : "★"} ${esc(h.winnerName)} ${st[0] ? st[0].total : ""} · ${h.mode === "chip" ? "Chip" : "Normal"} · target ${h.target}</summary>
       <div class="scroll"><table><thead><tr><th>Player</th>${rounds.map(k => `<th>${k.toUpperCase()}</th>`).join("")}<th>Total</th></tr></thead><tbody>` +
       st.map(p => `<tr><td class="name">${esc(p.name)}</td>${rounds.map(k => {
         const x = (results[k] || {})[p.id];
@@ -731,10 +751,10 @@ async function startNewGame() {
     const no = meta.gameNo || 1, d = derive(g), win = d.rows[0];
     const upd = {};
     upd[`history/g${no}`] = { gameNo: no, mode: meta.mode, target: meta.target, rounds: d.rounds.length,
-      finishedAt: firebase.database.ServerValue.TIMESTAMP, winnerId: win.id, winnerName: win.name,
+      finishedAt: firebase.database.ServerValue.TIMESTAMP, winnerId: win.id, winnerName: win.name, endedEarly: !!meta.endedEarly,
       standings: d.rows.map(r => ({ id: r.id, name: r.name, total: r.total })), results: g.results || {} };
     upd.results = null; upd.submissions = null;
-    upd["meta/gameNo"] = no + 1; upd["meta/round"] = 1; upd["meta/status"] = "playing"; upd["meta/tie"] = false;
+    upd["meta/endedEarly"] = null; upd["meta/gameNo"] = no + 1; upd["meta/round"] = 1; upd["meta/status"] = "playing"; upd["meta/tie"] = false;
     upd["meta/mode"] = mode; upd["meta/target"] = target;
     await ref.update(upd);
   } catch (e) { flash("err", e.message); }
@@ -823,7 +843,7 @@ function renderScore(code, g) {
   const meta = g.meta, d = derive(g), chip = meta.mode === "chip", finished = meta.status === "finished", win = d.rows[0];
   const open = new Set([...el.querySelectorAll("details.past[open]")].map(x => x.dataset.g)); // keep opened items open on live refresh
   el.innerHTML =
-    (finished && win ? `<div class="banner">★ ${esc(win.name)} wins with ${win.total} points!</div>` : meta.tie ? `<div class="banner tie">Top score tied – one more round.</div>` : "") +
+    (finished ? finishedBannerHtml(meta, d, false) : meta.tie ? `<div class="banner tie">Top score tied – one more round.</div>` : "") +
     `<div class="card" data-i="${meta.gameNo || 1}" style="--c:var(--blue)"><div class="mute" style="font-size:.8rem">${esc(meta.name)}</div>
       <div class="codes">${[...code].map(c => `<span class="pc" data-n="${esc(c)}">${esc(c)}</span>`).join("")}</div>
       <div class="meta"><span class="pill">Game ${meta.gameNo || 1}</span><span class="pill">${finished ? "Finished" : "Round " + meta.round}</span><span class="pill">${chip ? "Chip" : "Normal"}</span><span class="pill">Target ${meta.target}</span></div></div>
