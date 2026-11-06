@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14532d">
+<title>Flip 7 With a Vengeance – Scoreboard</title>
+<style>
+  :root{--ink:#14122b;--cream:#fff8e8;--paper:#f3ead2;--mute:#6b6684;--line:#d9cfb4;
+    --red:#e63946;--blue:#2a6fdb;--green:#23975a;--orange:#f4802a;--purple:#7b3fe4;--yellow:#f2c230;--pink:#e0529c;--teal:#1a9fa0;
+    --ok:#1b7f4b;--bad:#c62839}
+  *{box-sizing:border-box}
+  html,body{margin:0;color:var(--cream);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  body{min-height:100vh;padding-bottom:env(safe-area-inset-bottom);
+    background:
+      radial-gradient(circle at 20% 10%,rgba(123,63,228,.25),transparent 45%),
+      radial-gradient(circle at 85% 30%,rgba(230,57,70,.18),transparent 40%),
+      repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 12px,transparent 12px 24px),
+      #0c0a1f}
+
+  /* ---------- header: fan of cards ---------- */
+  header{padding:22px 16px 6px;text-align:center}
+  .fan{display:flex;justify-content:center;height:92px;margin-bottom:6px}
+  .fan .pc{margin-left:-16px;transform-origin:50% 120%}
+  .fan .pc:first-child{margin-left:0}
+  header h1{margin:6px 0 0;font:900 1.7rem/1.05 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--cream);text-shadow:3px 3px 0 var(--red)}
+  header h1 span{color:var(--yellow);font-size:2.3rem;vertical-align:-3px}
+  header .sub{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--yellow);margin-top:6px}
+
+  /* ---------- playing card (mini) ---------- */
+  .pc{position:relative;display:inline-flex;align-items:center;justify-content:center;width:56px;height:78px;background:var(--cream);color:var(--c,var(--ink));
+    border:3px solid var(--ink);border-radius:5px;box-shadow:2px 3px 0 rgba(0,0,0,.55);font:900 1.7rem/1 Impact,"Arial Black",system-ui,sans-serif;vertical-align:middle}
+  .pc::before,.pc::after{content:attr(data-n);position:absolute;font-size:.62rem;font-weight:900;line-height:1}
+  .pc::before{top:3px;left:4px}.pc::after{bottom:3px;right:4px;transform:rotate(180deg)}
+  .pc.sm{width:46px;height:64px;font-size:1.35rem}
+  .eq{font:900 1.6rem Impact,"Arial Black",sans-serif;color:var(--yellow);margin:0 4px;vertical-align:middle}
+  .hand{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:12px 0}
+
+  /* ---------- tabs = cards ---------- */
+  nav{position:sticky;top:0;z-index:5;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:12px 12px 10px;background:rgba(12,10,31,.92);backdrop-filter:blur(6px);border-bottom:2px solid #2b2650}
+  nav button{flex:1 0 auto;padding:12px 14px;border:3px solid var(--ink);border-radius:5px;background:var(--cream);color:var(--ink);font:900 .8rem Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:3px 3px 0 #000;transition:transform .12s}
+  nav button.on{background:var(--yellow);transform:translateY(-3px) rotate(-1.5deg);box-shadow:4px 6px 0 #000}
+  nav::-webkit-scrollbar{display:none}
+  main{max-width:640px;margin:0 auto;padding:18px 12px 48px}
+  section[hidden]{display:none}
+
+  /* ---------- big card panels ---------- */
+  .card{position:relative;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:8px;padding:42px 20px 48px;margin-bottom:18px;
+    box-shadow:5px 6px 0 rgba(0,0,0,.6),inset 0 0 0 5px var(--cream),inset 0 0 0 7px var(--c,var(--ink))}
+  .card::before,.card::after{content:attr(data-i);position:absolute;font:900 1.25rem/1 Impact,"Arial Black",system-ui,sans-serif;color:var(--c,var(--ink))}
+  .card::before{top:15px;left:18px}
+  .card::after{bottom:15px;right:18px;transform:rotate(180deg)}
+  .card h2{margin:0 0 10px;font:900 1.5rem/1.1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.03em;text-transform:uppercase;color:var(--c,var(--ink))}
+  .card h3{margin:14px 0 6px;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+  .card p{margin:8px 0}
+  ul{margin:6px 0;padding-left:20px}
+  li{margin:6px 0}
+  li::marker{color:var(--c,var(--ink))}
+  .steps{list-style:none;padding:0;counter-reset:s}
+  .steps li{counter-increment:s;display:flex;gap:12px;align-items:center;margin:8px 0;padding:8px 10px;background:var(--paper);border:2px solid var(--ink);border-radius:4px}
+  .steps li::before{content:counter(s);flex:none;display:flex;align-items:center;justify-content:center;width:32px;height:44px;background:var(--cream);border:2px solid var(--ink);border-radius:4px;color:var(--c);font:900 1.2rem Impact,"Arial Black",sans-serif;box-shadow:1px 2px 0 rgba(0,0,0,.5)}
+  .mute{color:var(--mute)}
+  code{background:var(--paper);padding:1px 5px;border-radius:3px;border:1px solid var(--line);font-size:.85em}
+  .ex{background:var(--ink);color:var(--cream);border-radius:5px;padding:10px 14px;margin-top:10px;font-family:ui-monospace,Menlo,monospace;font-size:.9rem;text-align:center}
+  .ex b{color:var(--yellow);font-size:1.3rem}
+
+  /* ---------- forms ---------- */
+  label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:12px 0 4px}
+  input[type=text],input[type=number],select{display:block;width:100%;height:52px;padding:0 12px;margin:0;border-radius:4px;border:3px solid var(--ink);background:#fff;color:var(--ink);font:700 16px system-ui,sans-serif;-webkit-appearance:none;appearance:none;box-shadow:none}
+  select{padding-right:38px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%2314122b' stroke-width='3'/%3E%3C/svg%3E") no-repeat right 14px center}
+  input[type=number]{-moz-appearance:textfield}
+  input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+  input:focus,select:focus{outline:3px solid var(--c,var(--yellow));outline-offset:1px}
+  .row{display:flex;gap:12px;align-items:flex-end}.row>*{flex:1;min-width:0}
+  .check{display:flex;align-items:center;gap:12px;padding:12px;margin-top:8px;border:3px solid var(--ink);border-radius:4px;background:var(--paper);color:var(--ink);font:700 1rem system-ui;letter-spacing:0;text-transform:none;cursor:pointer}
+  .check:has(input:checked){background:var(--c,var(--yellow));color:#fff}
+  .check input{width:22px;height:22px;accent-color:var(--ink)}
+  button.btn{display:block;width:calc(100% - 4px);padding:14px;margin-top:14px;border:3px solid var(--ink);border-radius:5px;background:var(--yellow);color:var(--ink);font:900 1.05rem Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;box-shadow:3px 4px 0 var(--ink)}
+  button.btn:active{transform:translate(2px,3px);box-shadow:1px 1px 0 var(--ink)}
+  button.btn:disabled{opacity:.45;cursor:not-allowed}
+  button.btn.ghost{background:var(--paper)}
+  button.btn.danger{background:var(--red);color:#fff;box-shadow:3px 4px 0 #000}
+  .msg{padding:10px 12px;border-radius:4px;margin:12px 0;font-size:.92rem;border:2px solid var(--ink);font-weight:600}
+  .msg.warn{background:#fff0b8;color:#5a3d00}.msg.err{background:#ffd5d8;color:#7a0f1b}.msg.ok{background:#cdf2dc;color:#0f4b2b}
+  .result{font:900 1.6rem/1.2 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.03em;text-align:center;padding:16px 12px;margin-top:14px;border-radius:5px;background:var(--ink);color:var(--yellow)}
+  .result small{display:block;font:600 .8rem system-ui;letter-spacing:0;color:var(--cream);margin-top:2px}
+
+  /* ---------- game bits ---------- */
+  .codes{display:flex;gap:6px;margin:6px 0 2px}
+  .codes .pc{width:46px;height:62px;font-size:1.6rem;color:var(--c)}
+  .codes .pc:nth-child(1){--c:var(--red)}.codes .pc:nth-child(2){--c:var(--blue)}.codes .pc:nth-child(3){--c:var(--green)}.codes .pc:nth-child(4){--c:var(--orange)}.codes .pc:nth-child(5){--c:var(--purple)}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .pill{padding:3px 10px;border-radius:3px;background:var(--ink);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cream)}
+  table{width:100%;border-collapse:collapse;font-size:.95rem}
+  th,td{padding:9px 6px;text-align:right;border-bottom:2px dashed var(--line);white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--mute);font-weight:800;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;border-bottom:3px solid var(--ink)}
+  td.name{white-space:normal;word-break:break-word;font-weight:700}
+  tr.me td{background:#ffe9a3}
+  .scroll{overflow-x:auto}
+  .tot{font:900 1.3rem Impact,"Arial Black",sans-serif}
+  .sent{color:var(--ok);font-weight:700}.wait{color:var(--mute)}
+  .banner{text-align:center;padding:16px;border-radius:8px;border:3px solid var(--ink);background:var(--yellow);color:var(--ink);font:900 1.3rem Impact,"Arial Black",sans-serif;letter-spacing:.04em;text-transform:uppercase;margin-bottom:18px;box-shadow:5px 6px 0 rgba(0,0,0,.6)}
+  .banner.tie{background:var(--orange)}
+  .setup li{margin:8px 0}
+  details.past{margin:8px 0;border:2px solid var(--ink);border-radius:4px;background:var(--paper)}
+  details.past summary{padding:10px 12px;font-weight:700;cursor:pointer}
+  details.past .scroll{padding:0 10px 10px}
+  /* ---------- face cards (number / power / special) ---------- */
+  .picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:12px 10px;margin:8px 0 10px}
+  .fc{position:relative;display:block;width:100%;aspect-ratio:5/7;padding:0;margin:0;border:2px solid #b3a47a;border-radius:5px;background:var(--face,var(--cream));color:var(--c,var(--ink));
+    box-shadow:inset 0 0 0 3px var(--face,var(--cream)),inset 0 0 0 5px var(--c,var(--ink)),2px 3px 0 rgba(0,0,0,.55);font-family:Impact,"Arial Black",system-ui,sans-serif;text-align:center;overflow:hidden}
+  button.fc{cursor:pointer;opacity:.62;transition:transform .12s,opacity .12s}
+  button.fc.on,button.fc.power{opacity:1}
+  button.fc.on{transform:translateY(-7px);box-shadow:inset 0 0 0 3px var(--face,var(--cream)),inset 0 0 0 5px var(--c,var(--ink)),3px 9px 0 rgba(0,0,0,.55)}
+  button.fc:active{transform:translateY(-2px)}
+  .fc::before{content:"";position:absolute;top:6px;left:50%;width:16px;height:4px;margin-left:-8px;background:var(--c,var(--ink));border-radius:0 0 3px 3px}
+  .fc .n{position:absolute;left:0;right:0;top:50%;transform:translateY(-58%);font-size:2.1rem;line-height:1;color:var(--c,var(--ink))}
+  .fc .n.l{font-size:1.6rem}
+  .fc .w{position:absolute;left:7px;right:7px;bottom:8px;padding:1px 0;background:#fff;border:1px solid var(--c,var(--ink));color:var(--ink);font:700 .5rem/1.3 system-ui,sans-serif;letter-spacing:.05em;white-space:nowrap}
+  .fc.power{--face:#e8553d;--c:#f6c453;background:radial-gradient(circle at 50% 40%,#f0735c,#d9442c)}
+  .fc.power .n{color:#fff}
+  .fc.power .w{background:#fff3d6;border-color:#7a1d0c}
+  .fc[data-c]::after{content:"x" attr(data-c);position:absolute;top:4px;right:4px;padding:0 4px;background:var(--bad);color:#fff;border-radius:3px;font:900 .6rem/1.4 system-ui,sans-serif}
+  .hand{display:flex;flex-wrap:wrap;gap:10px;align-items:center;min-height:30px}
+  .hand .fc{width:52px}
+  .hand .fc .w{display:none}
+  .hand .fc .n{font-size:1.6rem}
+  .hand .fc .n.l{font-size:1.25rem}
+  button.tg{height:52px;border:3px solid var(--ink);border-radius:4px;background:var(--paper);color:var(--ink);font:900 1rem Impact,"Arial Black",sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+  button.tg.on{background:var(--c);color:#fff;box-shadow:inset 0 0 0 3px var(--cream)}
+  .stepper{display:flex;gap:10px;align-items:stretch}
+  .stepper button{width:64px;height:56px;border:3px solid var(--ink);border-radius:4px;background:var(--paper);color:var(--ink);font:900 1.6rem Impact,"Arial Black",sans-serif;cursor:pointer;box-shadow:2px 3px 0 var(--ink)}
+  .stepper button:active{transform:translate(1px,2px);box-shadow:none}
+  .stepper div{flex:1;display:flex;align-items:center;justify-content:center;border:3px solid var(--ink);border-radius:4px;background:#fff;font:900 1.8rem Impact,"Arial Black",sans-serif}
+</style>
+</head>
+<body>
+<header>
+  <div class="fan" aria-hidden="true">
+    <span class="pc" style="--c:var(--red);transform:rotate(-20deg)" data-n="7">7</span>
+    <span class="pc" style="--c:var(--blue);transform:rotate(-10deg)" data-n="12">12</span>
+    <span class="pc" style="--c:var(--green);transform:rotate(0deg) translateY(-6px)" data-n="÷2">÷2</span>
+    <span class="pc" style="--c:var(--orange);transform:rotate(10deg)" data-n="-4">-4</span>
+    <span class="pc" style="--c:var(--purple);transform:rotate(20deg)" data-n="+15">+15</span>
+  </div>
+  <h1>Flip <span>7</span><br>With a Vengeance</h1>
+  <div class="sub">Live scoreboard</div>
+</header>
+<nav id="tabs">
+  <button data-tab="rules">Rules</button>
+  <button data-tab="chips">Chip twist</button>
+  <button data-tab="board" class="on">Game</button>
+  <button data-tab="score">Scoreboard</button>
+  <button data-tab="admin">Admin</button>
+</nav>
+<main>
+
+<!-- ============ RULES ============ -->
+<section id="tab-rules" hidden>
+  <div class="card" data-i="7" style="--c:var(--red)">
+    <h2>The goal</h2>
+    <p>Each round, collect <b>7 different number cards</b> (1 to 13) without flipping a duplicate. First to reach the target score at the end of a round wins the game.</p>
+  </div>
+  <div class="card" data-i="♠" style="--c:var(--teal)">
+    <h2>The cards</h2>
+    <div id="gallery"></div>
+  </div>
+  <div class="card" data-i="1" style="--c:var(--blue)">
+    <h2>On your turn</h2>
+    <ul>
+      <li><b>Flip</b> a card from the deck onto your row, or <b>Stay</b> and bank what you have.</li>
+      <li>Flip a <b>duplicate number</b> and you <b>bust</b>: 0 points this round.</li>
+      <li>Collect <b>7 unique numbers</b> = <b>Flip 7!</b> The round ends immediately and you get a <b>+15</b> bonus.</li>
+      <li>Action cards (such as Freeze, Flip Three, Second Chance) are resolved as soon as they are flipped. Check your physical rulebook for the full Vengeance action card list.</li>
+    </ul>
+  </div>
+  <div class="card" data-i="÷2" style="--c:var(--green)">
+    <h2>Round score</h2>
+    <ol class="steps">
+      <li>Add all <b>number cards</b> (Lucky 13 = 13, The Zero = 0).</li>
+      <li>If you hold the <b>÷2</b> power card, halve it and <b>round up</b>.</li>
+      <li>Subtract the <b>minus power cards</b>. The score cannot go below 0.</li>
+      <li>If you flipped 7 cards, add <b>15</b>.</li>
+      <li><b>Bust</b> = 0 points.</li>
+      <li><b>The Zero</b>: you need <b>7 cards including the Zero itself</b> (other power cards do not count), otherwise your points are not counted.</li>
+    </ol>
+  </div>
+  <div class="card" data-i="200" style="--c:var(--orange)">
+    <h2>End of game</h2>
+    <ul>
+      <li>Ends when at least one player has reached the <b>target</b> (default 200) at the end of a round.</li>
+      <li>Highest total wins.</li>
+      <li>If the top score is <b>tied</b>, play one more round.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ CHIP TWIST ============ -->
+<section id="tab-chips" hidden>
+  <div class="card" data-i="●" style="--c:var(--purple)">
+    <h2>Chip twist</h2>
+    <p>House rule. Chips are score multipliers, used only in <b>Chip mode</b>. Normal mode is the same game without chips.</p>
+    <ul>
+      <li>One chip type, each worth <b>1</b>.</li>
+      <li>Everyone starts with <b>5 chips</b> and receives <b>2 more every round</b>, including round 1. Chips carry over.</li>
+      <li>Before flipping, bet <b>any number of chips</b> you hold. Betting 0 counts as <b>x1</b>.</li>
+      <li>After normal scoring (including the +15 bonus), the round score is <b>multiplied by the chips bet</b>.</li>
+      <li>If you <b>bust</b>: you score 0 and <b>lose the chips you bet</b>. Otherwise you keep them.</li>
+      <li>Late joiners get <b>5 + 2 x current round</b> chips.</li>
+    </ul>
+  </div>
+  <div class="card" data-i="99" style="--c:var(--pink)">
+    <h2>Worked example</h2>
+    <div class="hand">
+      <span class="pc" style="--c:var(--blue)" data-n="45">45</span>
+      <span class="pc" style="--c:var(--red)" data-n="-4">-4</span>
+      <span class="pc" style="--c:var(--red)" data-n="-8">-8</span>
+      <span class="pc" style="--c:var(--purple)" data-n="●">x3</span>
+    </div>
+    <div class="ex">
+      (45 - 4 - 8) = 33<br>
+      33 x 3 = <b>99 points</b>
+    </div>
+    <p class="mute">Number cards 45, power cards -4 and -8, bet 3 chips. Had this player busted, they would score 0 and lose the 3 chips.</p>
+  </div>
+</section>
+
+<!-- ============ SCOREBOARD ============ -->
+<section id="tab-board">
+  <div id="board"></div>
+</section>
+
+<!-- ============ SCOREBOARD (admin view) ============ -->
+<section id="tab-score" hidden>
+  <div id="score"><div class="card" data-i="S" style="--c:var(--blue)"><h2>Scoreboard</h2><p class="mute">Go to the Admin tab and tap <b>View</b> on a game to watch its scoreboard here.</p></div></div>
+</section>
+
+<!-- ============ ADMIN ============ -->
+<section id="tab-admin" hidden>
+  <div id="admin"></div>
+</section>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script src="config.js"></script>
+<script>
+/* ===================================================================
+ *  FIREBASE CONFIG comes from config.js (gitignored), generated from
+ *  .env by `node build-config.mjs`. See .env_example and README.
+ *  Without it the placeholders below are used and the Game tab shows
+ *  a "Firebase not configured" message.
+ * =================================================================== */
+const CFG = window.FIREBASE_CFG || {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  appId: "YOUR_APP_ID"
+};
+/* ================================================================= */
+
+const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no I, O, 0, 1
+const START_CHIPS = 5, CHIPS_PER_ROUND = 2, FLIP7_BONUS = 15;
+const SESSION_KEY = "flip7v.session";
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const configured = !/YOUR_/.test(CFG.apiKey + CFG.databaseURL) && !!CFG.databaseURL;
+
+/* ---------- tabs ---------- */
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tab]"); if (!b) return;
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  ["rules", "chips", "board", "score", "admin"].forEach(t => $("#tab-" + t).hidden = t !== b.dataset.tab);
+  if (b.dataset.tab === "admin") renderAdmin();
+  window.scrollTo(0, 0);
+});
+
+/* ---------- scoring ---------- */
+function calcScore({ nums, minus, half, flip7, bust, zero, bet, chip }) {
+  let base = 0;
+  // zero = holds the 0 power card without 7 number cards (0 included): no points
+  if (!bust && !zero) {
+    base = nums;
+    if (half) base = Math.ceil(base / 2);
+    base = Math.max(0, base - minus);
+    if (flip7) base += FLIP7_BONUS;
+  }
+  const mult = chip ? Math.max(bet, 1) : 1;
+  return { base, mult, points: bust || zero ? 0 : base * mult, lost: bust && chip ? bet : 0 };
+}
+
+/* ---------- state ---------- */
+let db = null, gameRef = null;
+const S = { session: null, game: null, calcKey: null, msg: null };
+
+function loadSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
+function saveSession(s) { s ? localStorage.setItem(SESSION_KEY, JSON.stringify(s)) : localStorage.removeItem(SESSION_KEY); }
+
+/* ---------- derived data ---------- */
+function derive(g) {
+  const meta = g.meta, results = g.results || {}, subs = (g.submissions || {})["r" + meta.round] || {};
+  const rows = Object.entries(g.players || {}).map(([id, p]) => {
+    let total = 0, lost = 0; const hist = {};
+    for (const k in results) { const x = results[k] && results[k][id]; if (x) { total += x.points; lost += x.lost || 0; hist[k] = x; } }
+    return { id, name: p.name, total, chips: START_CHIPS + CHIPS_PER_ROUND * meta.round - lost, hist, sub: subs[id] };
+  }).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+  return { rows, sent: rows.filter(r => r.sub).length, rounds: Object.keys(results).sort((a, b) => a.slice(1) - b.slice(1)) };
+}
+
+/* ---------- boot ---------- */
+if (configured) {
+  firebase.initializeApp(CFG);
+  db = firebase.database();
+  S.session = loadSession();
+  if (S.session) attach(S.session.code);
+}
+renderBoard();
+
+function attach(code) {
+  detach();
+  gameRef = db.ref("games/" + code);
+  gameRef.on("value", snap => {
+    const g = snap.val();
+    if (!g || !g.meta) { if (S.session) { leave(true); S.msg = { t: "err", m: "That game no longer exists." }; renderBoard(); } return; }
+    S.game = g;
+    if (g.meta.adminId === S.session.pid) addMine(S.session.code, S.session.pid);
+    if (!g.players || !g.players[S.session.pid]) { leave(true); S.msg = { t: "err", m: "You are no longer in that game." }; renderBoard(); return; }
+    renderBoard();
+  }, err => { S.msg = { t: "err", m: "Database error: " + err.message }; renderBoard(); });
+}
+function detach() { if (gameRef) gameRef.off(); gameRef = null; }
+function leave(silent) {
+  detach(); S.session = null; S.game = null; S.calcKey = null; saveSession(null);
+  if (!silent) { S.msg = null; renderBoard(); }
+}
+
+/* ---------- render ---------- */
+function renderBoard() {
+  const el = $("#board");
+  if (!configured) {
+    el.innerHTML = `<div class="card" data-i="!" style="--c:var(--red)"><h2>Firebase not configured</h2>
+      <div class="msg warn">The live scoreboard needs a free Firebase Realtime Database. Copy <code>.env_example</code> to <code>.env</code>, fill in your Firebase config, then run <code>node build-config.mjs</code> to create <code>config.js</code>. On Vercel, set the same variables in Project Settings.</div>
+      <h3>Free setup (Spark plan, no card needed)</h3>
+      <ol class="steps setup">
+        <li><span>Go to <b>console.firebase.google.com</b> &gt; Create a project. Skip Analytics.</span></li>
+        <li><span><b>Databases &amp; Storage &gt; Realtime Database &gt; Create database</b>. Pick a region, start in <b>test mode</b>.</span></li>
+        <li><span><b>Project settings &gt; Your apps &gt; Web (&lt;/&gt;)</b>. Register the app, copy the <code>firebaseConfig</code> values into <code>.env</code>.</span></li>
+        <li><span><b>Realtime Database &gt; Rules</b>: replace with the rules below and Publish.</span></li>
+      </ol>
+      <div class="ex" style="text-align:left;white-space:pre">{ "rules": { "games": { "$code": {
+  ".read": true, ".write": true } } } }</div>
+      <p class="mute">Rules and Chip twist tabs work without it.</p></div>`;
+    return;
+  }
+  if (!S.session || !S.game) { S.calcKey = null; renderLobby(el); return; }
+  renderGame(el);
+}
+
+function msgHtml() { const m = S.msg; S.msg = null; return m ? `<div class="msg ${m.t}">${esc(m.m)}</div>` : ""; }
+
+function renderLobby(el) {
+  el.innerHTML = `
+  ${msgHtml()}
+  <div class="card" data-i="A" style="--c:var(--green)"><h2>Create a game</h2>
+    <label for="c-name">Your name</label><input type="text" id="c-name" maxlength="20" autocomplete="nickname">
+    <label for="c-game">Game name</label><input type="text" id="c-game" maxlength="30" placeholder="Friday night">
+    <div class="row">
+      <div><label for="c-mode">Mode</label><select id="c-mode"><option value="normal">Normal</option><option value="chip">Chip</option></select></div>
+      <div><label for="c-target">Target score</label><input type="number" id="c-target" inputmode="numeric" value="200" min="10" max="2000"></div>
+    </div>
+    <button class="btn" id="b-create">Create game (I also play)</button>
+  </div>
+  <div class="card" data-i="J" style="--c:var(--orange)"><h2>Join a game</h2>
+    <label for="j-name">Your name</label><input type="text" id="j-name" maxlength="20" autocomplete="nickname">
+    <label for="j-code">Join code</label><input type="text" id="j-code" maxlength="5" autocapitalize="characters" autocomplete="off" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:.2em">
+    <button class="btn" id="b-join">Join</button>
+  </div>`;
+  $("#b-create").onclick = createGame;
+  $("#b-join").onclick = joinGame;
+}
+
+async function createGame() {
+  const name = $("#c-name").value.trim(), gname = $("#c-game").value.trim() || "Flip 7 game";
+  const mode = $("#c-mode").value, target = parseInt($("#c-target").value, 10);
+  if (!name) return flash("err", "Enter your name.");
+  if (!(target >= 10 && target <= 2000)) return flash("err", "Target must be between 10 and 2000.");
+  $("#b-create").disabled = true;
+  try {
+    const pid = db.ref("games").push().key;
+    const meta = { name: gname, mode, target, round: 1, gameNo: 1, status: "playing", adminId: pid, createdAt: firebase.database.ServerValue.TIMESTAMP };
+    let code = null;
+    for (let i = 0; i < 12 && !code; i++) {
+      const c = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+      // transaction on meta: only succeeds if the code is unused
+      const r = await db.ref(`games/${c}/meta`).transaction(cur => cur === null ? meta : undefined);
+      if (r.committed) code = c;
+    }
+    if (!code) throw new Error("Could not allocate a join code, try again.");
+    await db.ref(`games/${code}/players/${pid}`).set({ name, joinRound: 1 });
+    addMine(code, pid);
+    S.session = { code, pid }; saveSession(S.session); attach(code);
+  } catch (e) { flash("err", e.message); }
+}
+
+async function joinGame() {
+  const name = $("#j-name").value.trim(), code = $("#j-code").value.trim().toUpperCase();
+  if (!name) return flash("err", "Enter your name.");
+  if (!/^[A-Z2-9]{5}$/.test(code)) return flash("err", "Join code is 5 characters.");
+  $("#b-join").disabled = true;
+  try {
+    const snap = await db.ref(`games/${code}/meta`).once("value");
+    const meta = snap.val();
+    if (!meta) throw new Error("No game with that code.");
+    if (meta.status === "finished") throw new Error("That game has already finished.");
+    const pid = db.ref(`games/${code}/players`).push().key;
+    await db.ref(`games/${code}/players/${pid}`).set({ name, joinRound: meta.round });
+    S.session = { code, pid }; saveSession(S.session); attach(code);
+  } catch (e) { flash("err", e.message); }
+}
+
+function flash(t, m) { S.msg = { t, m }; renderBoard(); }
+
+function renderGame(el) {
+  const g = S.game, meta = g.meta, d = derive(g), chip = meta.mode === "chip";
+  const me = d.rows.find(r => r.id === S.session.pid);
+  const isAdmin = meta.adminId === S.session.pid;
+  const finished = meta.status === "finished";
+  const winner = finished ? d.rows[0] : null;
+
+  // Build the skeleton once per (round, status); afterwards only patch the dynamic parts so the calculator keeps its inputs.
+  const key = [S.session.code, meta.gameNo || 1, meta.round, meta.status].join("|");
+  if (S.calcKey !== key) {
+    S.calcKey = key; S.pastSig = null;
+    el.innerHTML = `
+      ${msgHtml()}
+      <div id="g-banner"></div>
+      <div class="card" data-i="${meta.round}" style="--c:var(--blue)">
+        <div class="mute" style="font-size:.8rem">${esc(meta.name)} – join code</div>
+        <div class="codes">${[...S.session.code].map(c => `<span class="pc" data-n="${esc(c)}">${esc(c)}</span>`).join("")}</div>
+        <div class="meta"><span class="pill">${chip ? "Chip mode" : "Normal mode"}</span><span class="pill">Target ${meta.target}</span><span class="pill">Game ${meta.gameNo || 1}</span><span class="pill">Round ${meta.round}</span><span class="pill">You: ${esc(me.name)}</span></div>
+      </div>
+      <div id="g-calc"></div>
+      <div id="g-admin"></div>
+      <div class="card" data-i="★" style="--c:var(--yellow)"><h2>Standings</h2><div class="scroll" id="g-stand"></div></div>
+      <div class="card" id="g-histcard" data-i="H" style="--c:var(--teal)"><h3>Round history</h3><div class="scroll" id="g-hist"></div></div>
+      <div class="card" id="g-pastcard" data-i="P" style="--c:var(--pink)"><h2>Past games</h2><div id="g-past"></div></div>
+      <button class="btn ghost" id="b-leave">Leave game on this device</button>`;
+    $("#b-leave").onclick = () => { if (confirm("Leave this game on this device? You can rejoin only by joining again as a new player.")) leave(); };
+    if (!finished) buildCalc(me);
+  }
+  patchGame(d, me, isAdmin, finished, winner, chip);
+}
+
+function patchGame(d, me, isAdmin, finished, winner, chip) {
+  const g = S.game, meta = g.meta;
+
+  // banner
+  let b = "";
+  if (finished) b = `<div class="banner">★ ${esc(winner.name)} wins with ${winner.total} points!${isAdmin ? "" : `<br><small style="font:600 .75rem system-ui;letter-spacing:0">Waiting for the admin to start the next game.</small>`}</div>`;
+  else if (meta.tie) b = `<div class="banner tie">Top score tied – play one more round.</div>`;
+  $("#g-banner").innerHTML = b;
+
+  // standings + round history
+  $("#g-stand").innerHTML = standingsHtml(d, meta, me.id, finished, chip);
+  $("#g-histcard").hidden = !d.rounds.length;
+  $("#g-hist").innerHTML = historyHtml(d, chip);
+
+  // admin
+  const adm = $("#g-admin");
+  if (isAdmin && !finished) {
+    if (!adm.firstChild) {
+      adm.innerHTML = `<button class="btn danger" id="b-close"></button>`;
+      $("#b-close").onclick = closeRound;
+    }
+    $("#b-close").textContent = `Close round (${d.sent}/${d.rows.length} sent)`;
+  } else if (isAdmin && finished) {
+    if (!adm.firstChild) { adm.innerHTML = newGameCardHtml(meta); $("#b-new").onclick = startNewGame; }
+  } else adm.innerHTML = "";
+
+  // past games (rebuilt only when the list changes, so open <details> stay open)
+  const sig = Object.keys(g.history || {}).join(",");
+  if (S.pastSig !== sig) { S.pastSig = sig; $("#g-past").innerHTML = pastGamesHtml(g.history); }
+  $("#g-pastcard").hidden = !sig;
+
+  if (!finished) updateCalc(me);
+}
+
+/* ---------- card faces ---------- */
+const WORDS = ["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN"];
+const PALETTE = ["red", "blue", "green", "orange", "purple", "pink", "teal"];
+const NUM_CARDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+const POWER_MINUS = [2, 4, 6, 8, 10];
+
+function faceCard({ k, v, i, label, word, kind, color, title }) {
+  const t = k ? "button" : "span";
+  const attrs = (k ? ` type="button" data-k="${k}"` : "") + (v !== undefined ? ` data-v="${v}"` : "") + (i !== undefined ? ` data-i="${i}"` : "") + (title ? ` title="${esc(title)}"` : "");
+  const long = String(label).length > 2 ? " l" : "";
+  return `<${t} class="fc ${kind}"${attrs}${color ? ` style="--c:${color}"` : ""}><span class="n${long}">${esc(label)}</span><span class="w">${esc(word)}</span></${t}>`;
+}
+const numCard = (n, k) => faceCard({ k, v: n, label: n, word: WORDS[n], kind: "num", color: `var(--${PALETTE[n % PALETTE.length]})` });
+const minusCard = (n, k, i) => faceCard({ k, v: n, i, label: `-${n}`, word: "POWER", kind: "power", title: k ? "Tap to remove" : "" });
+const halfCard = k => faceCard({ k, label: "÷2", word: "POWER", kind: "power" });
+const zeroCard = k => faceCard({ k, label: "0", word: "THE ZERO", kind: "candy", color: "var(--purple)" });
+const luckyCard = k => faceCard({ k, label: "13", word: "LUCKY", kind: "candy", color: "var(--blue)" });
+
+/* Rules tab gallery */
+(function () {
+  const g = $("#gallery"); if (!g) return;
+  g.innerHTML = `
+    <h3>Number cards (1 to 13)</h3><div class="picker">${NUM_CARDS.map(n => numCard(n)).join("")}</div>
+    <h3>Power cards</h3><div class="picker">${POWER_MINUS.map(n => minusCard(n)).join("")}${halfCard()}</div>
+    <p class="mute">Each minus card takes its value off your number card total. The ÷2 card halves the total (round up) before the minus cards.</p>
+    <h3>Special cards</h3>
+    <div class="picker">${zeroCard()}${luckyCard()}</div>
+    <ul>
+      <li><b>The Zero</b>: scores 0, unless you hold 7 cards including the Zero. Then your points count.</li>
+      <li><b>Lucky 13</b>: you may have one other 13. A third 13 is a bust.</li>
+    </ul>`;
+})();
+
+/* ---------- calculator (tap your cards, total is computed) ---------- */
+let K = { nums: [], minus: [], half: false, zero: false, lucky: false, bust: false, bet: 0 };
+const dupNumber = () => K.nums.find(n => K.nums.filter(x => x === n).length >= 2);
+const cardCount = () => new Set(K.nums).size + (K.zero ? 1 : 0) + (K.lucky ? 1 : 0);
+
+function buildCalc(me) {
+  const chip = S.game.meta.mode === "chip", s = me.sub || {}, saved = s.numCards || [];
+  K = { nums: saved.filter(n => n >= 1), minus: (s.minusCards || []).slice(), half: !!s.half,
+    zero: !!s.cardZero || saved.includes(0), lucky: !!s.cardLucky, bust: s.manualBust !== undefined ? !!s.manualBust : !!s.bust && !saved.some((n, i) => saved.indexOf(n) !== i), bet: s.bet || 0 };
+  const box = $("#g-calc");
+  box.innerHTML = `<div class="card" data-i="${S.game.meta.round}" style="--c:var(--purple)"><h2>My round ${S.game.meta.round} cards</h2>
+    <h3>Number cards <span class="mute">(tap twice = duplicate = bust, third tap removes)</span></h3>
+    <div class="picker">${NUM_CARDS.map(n => numCard(n, "n")).join("")}</div>
+    <h3>Power cards <span class="mute">(tap minus cards to add)</span></h3>
+    <div class="picker">${POWER_MINUS.map(n => minusCard(n, "m")).join("")}${halfCard("half")}</div>
+    <h3>Special cards</h3>
+    <div class="picker">${zeroCard("zero")}${luckyCard("lucky")}</div>
+    <p class="mute" style="font-size:.8rem;margin:4px 0 0">Lucky 13 lets you hold one other 13. A third 13 is a bust.</p>
+    ${chip ? `<h3>Chips to bet <span id="k-have" class="mute"></span></h3>
+    <div class="stepper"><button type="button" data-k="bm">−</button><div id="k-bet">0</div><button type="button" data-k="bp">+</button></div>` : ""}
+    <h3>Your hand</h3>
+    <div class="hand" id="k-hand"></div>
+    <button type="button" class="tg" data-k="bust" style="--c:var(--red);width:100%">Busted (flipped a duplicate)</button>
+    <div class="result" id="k-res"></div>
+    <div id="k-err"></div>
+    <button class="btn" id="k-send">Send my score</button>
+    <div id="k-status" class="mute" style="text-align:center;font-size:.85rem;margin-top:8px"></div>
+  </div>`;
+  box.onclick = e => {
+    const b = e.target.closest("[data-k]"); if (!b) return;
+    const k = b.dataset.k, v = Number(b.dataset.v), me2 = currentMe();
+    if (k === "n") { const c = K.nums.filter(x => x === v).length; K.nums = K.nums.filter(x => x !== v); for (let j = 0; j < (c + 1) % 3; j++) K.nums.push(v); } // 0 -> 1 -> 2 (duplicate) -> 0
+    else if (k === "m") K.minus.push(v);
+    else if (k === "mr") K.minus.splice(Number(b.dataset.i), 1);
+    else if (k === "half") K.half = !K.half;
+    else if (k === "zero") K.zero = !K.zero;
+    else if (k === "lucky") K.lucky = !K.lucky;
+    else if (k === "bust") K.bust = !K.bust;
+    else if (k === "bm") K.bet = Math.max(0, K.bet - 1);
+    else if (k === "bp") K.bet = Math.min(me2.chips, K.bet + 1);
+    updateCalc(me2);
+  };
+  $("#k-send").onclick = sendScore;
+}
+
+function currentMe() { return derive(S.game).rows.find(r => r.id === S.session.pid); }
+
+function readCalc(me) {
+  const chip = S.game.meta.mode === "chip", count = cardCount();
+  const v = {
+    nums: K.nums.reduce((a, b) => a + b, 0) + (K.lucky ? 13 : 0),
+    minus: K.minus.reduce((a, b) => a + b, 0), bet: chip ? K.bet : 0,
+    half: K.half, flip7: count >= 7, bust: K.bust || dupNumber() !== undefined, zero: K.zero && count < 7, chip };
+  const err = chip && v.bet > me.chips ? `You only have ${me.chips} chips.` : "";
+  return { v, err };
+}
+
+function updateCalc(me) {
+  if (!$("#k-res") || !me) return;
+  const chip = S.game.meta.mode === "chip";
+  if (chip && K.bet > me.chips) K.bet = me.chips; // chips can shrink if a round closes
+  const { v, err } = readCalc(me), r = calcScore(v), count = cardCount();
+
+  const isOn = (k, val) => k === "n" ? K.nums.includes(val) : ["half", "zero", "lucky", "bust"].includes(k) ? !!K[k] : false;
+  document.querySelectorAll("#g-calc [data-k=n]").forEach(b => { const c = K.nums.filter(x => x === Number(b.dataset.v)).length; if (c >= 2) b.dataset.c = c; else delete b.dataset.c; });
+  document.querySelectorAll("#g-calc [data-k]").forEach(b => { if (b.dataset.k !== "m") b.classList.toggle("on", isOn(b.dataset.k, Number(b.dataset.v))); });
+  if ($("#k-have")) $("#k-have").textContent = `(you have ${me.chips})`;
+  if ($("#k-bet")) $("#k-bet").textContent = K.bet;
+
+  const nums = [...K.nums].sort((a, b) => a - b);
+  $("#k-hand").innerHTML = count || K.minus.length
+    ? (K.zero ? zeroCard() : "") + nums.map(n => numCard(n)).join("") + (K.lucky ? luckyCard() : "") +
+      K.minus.map((n, i) => minusCard(n, "mr", i)).join("") + (K.half ? halfCard() : "")
+    : `<span class="mute">No cards yet. Tap your cards above.</span>`;
+
+  let txt, sub = "";
+  if (v.bust) {
+    const d = dupNumber();
+    txt = "Bust – 0 points";
+    sub = d === undefined ? "" : d === 13 && K.lucky ? "third 13" : `duplicate ${d}`;
+    if (v.chip && v.bet) sub += `${sub ? " · " : ""}you lose ${v.bet} chip${v.bet === 1 ? "" : "s"}`;
+  }
+  else if (v.zero) { txt = "The Zero: no points yet"; sub = `needs 7 cards including the Zero (you have ${count})`; }
+  else {
+    txt = v.chip ? `Score ${r.base} x ${r.mult} = ${r.points} points` : `Score ${r.points} points`;
+    sub = `numbers ${v.nums}${v.half ? " ÷2" : ""}${v.minus ? ` − ${v.minus}` : ""}${v.flip7 ? ` + ${FLIP7_BONUS} (Flip 7!)` : ""}`;
+  }
+  $("#k-res").innerHTML = esc(txt) + (sub ? `<small>${esc(sub)}</small>` : "");
+  $("#k-err").innerHTML = err ? `<div class="msg err">${esc(err)}</div>` : "";
+  $("#k-send").disabled = !!err;
+  $("#k-send").textContent = me.sub ? "Resend my score" : "Send my score";
+  $("#k-status").textContent = me.sub ? `Sent: ${me.sub.points} points. You can resend until the round closes.` : "Not sent yet.";
+}
+
+async function sendScore() {
+  const g = S.game, me = currentMe(), { v, err } = readCalc(me);
+  if (err || g.meta.status !== "playing") return;
+  const round = g.meta.round, r = calcScore(v);
+  $("#k-send").disabled = true;
+  try {
+    // re-check round is still open on the server before writing
+    const cur = (await db.ref(`games/${S.session.code}/meta`).once("value")).val();
+    if (!cur || cur.round !== round || cur.status !== "playing") throw new Error("Round already closed.");
+    await db.ref(`games/${S.session.code}/submissions/r${round}/${S.session.pid}`).set({
+      nums: v.nums, minus: v.minus, bet: v.bet, half: v.half, flip7: v.flip7, bust: v.bust,
+      numCards: K.nums, minusCards: K.minus, manualBust: K.bust, cardZero: K.zero, cardLucky: K.lucky,
+      base: r.base, mult: r.mult, points: r.points, t: firebase.database.ServerValue.TIMESTAMP });
+  } catch (e) { S.msg = { t: "err", m: e.message }; S.calcKey = null; renderBoard(); }
+}
+
+/* ---------- admin: close round ---------- */
+async function closeRound() {
+  const g = S.game, meta = g.meta, d = derive(g), chip = meta.mode === "chip", r = meta.round;
+  if (meta.adminId !== S.session.pid || meta.status !== "playing") return;
+  if (d.sent < d.rows.length && !confirm(`Only ${d.sent}/${d.rows.length} sent. Players without a score get 0. Close anyway?`)) return;
+  const upd = {}, totals = [];
+  d.rows.forEach(p => {
+    const s = p.sub, bet = s ? Math.min(s.bet || 0, p.chips) : 0, bust = !!(s && s.bust);
+    upd[`results/r${r}/${p.id}`] = { points: s ? s.points : 0, bet: chip ? bet : 0, bust, sent: !!s, lost: chip && bust ? bet : 0 };
+    totals.push(p.total + (s ? s.points : 0));
+  });
+  const max = Math.max(...totals), topCount = totals.filter(t => t === max).length, reached = max >= meta.target;
+  if (reached && topCount === 1) { upd["meta/status"] = "finished"; upd["meta/tie"] = false; }
+  else { upd["meta/round"] = r + 1; upd["meta/tie"] = reached; }
+  try { await db.ref("games/" + S.session.code).update(upd); }
+  catch (e) { flash("err", e.message); }
+}
+
+/* ---------- series: new game in same code, history, admin tab ---------- */
+function pastGamesHtml(history) {
+  const list = Object.values(history || {}).sort((a, b) => b.gameNo - a.gameNo);
+  if (!list.length) return "";
+  const wins = {};
+  list.forEach(h => { const w = wins[h.winnerId] || (wins[h.winnerId] = { name: h.winnerName, n: 0 }); w.n++; });
+  const tally = Object.values(wins).sort((a, b) => b.n - a.n).map(w => `${esc(w.name)} ${w.n}`).join(" · ");
+  return `<p><b>Wins:</b> ${tally}</p>` + list.map(h => {
+    const results = h.results || {}, st = h.standings || [];
+    const rounds = Object.keys(results).sort((a, b) => a.slice(1) - b.slice(1));
+    return `<details class="past" data-g="${h.gameNo}"><summary>Game ${h.gameNo} · ★ ${esc(h.winnerName)} ${st[0] ? st[0].total : ""} · ${h.mode === "chip" ? "Chip" : "Normal"} · target ${h.target}</summary>
+      <div class="scroll"><table><thead><tr><th>Player</th>${rounds.map(k => `<th>${k.toUpperCase()}</th>`).join("")}<th>Total</th></tr></thead><tbody>` +
+      st.map(p => `<tr><td class="name">${esc(p.name)}</td>${rounds.map(k => {
+        const x = (results[k] || {})[p.id];
+        return `<td>${x ? (x.bust ? `<span style="color:var(--bad)">0✗</span>` : x.points) : "–"}</td>`;
+      }).join("")}<td class="tot">${p.total}</td></tr>`).join("") + `</tbody></table></div></details>`;
+  }).join("");
+}
+
+function newGameCardHtml(meta) {
+  return `<div class="card" data-i="+" style="--c:var(--green)"><h2>Next game</h2>
+    <p class="mute">Same code, same players. This game is saved to Past games.</p>
+    <div class="row">
+      <div><label for="n-mode">Mode</label><select id="n-mode"><option value="normal"${meta.mode === "normal" ? " selected" : ""}>Normal</option><option value="chip"${meta.mode === "chip" ? " selected" : ""}>Chip</option></select></div>
+      <div><label for="n-target">Target score</label><input type="number" id="n-target" inputmode="numeric" value="${meta.target}" min="10" max="2000"></div>
+    </div>
+    <button class="btn" id="b-new">Start new game</button></div>`;
+}
+
+async function startNewGame() {
+  const mode = $("#n-mode").value, target = parseInt($("#n-target").value, 10);
+  if (!(target >= 10 && target <= 2000)) return flash("err", "Target must be between 10 and 2000.");
+  const code = S.session.code, ref = db.ref("games/" + code);
+  $("#b-new").disabled = true;
+  try {
+    const g = (await ref.once("value")).val(), meta = g && g.meta;
+    if (!meta || meta.adminId !== S.session.pid) throw new Error("Only the admin can start a new game.");
+    if (meta.status !== "finished") throw new Error("This game is not finished yet.");
+    const no = meta.gameNo || 1, d = derive(g), win = d.rows[0];
+    const upd = {};
+    upd[`history/g${no}`] = { gameNo: no, mode: meta.mode, target: meta.target, rounds: d.rounds.length,
+      finishedAt: firebase.database.ServerValue.TIMESTAMP, winnerId: win.id, winnerName: win.name,
+      standings: d.rows.map(r => ({ id: r.id, name: r.name, total: r.total })), results: g.results || {} };
+    upd.results = null; upd.submissions = null;
+    upd["meta/gameNo"] = no + 1; upd["meta/round"] = 1; upd["meta/status"] = "playing"; upd["meta/tie"] = false;
+    upd["meta/mode"] = mode; upd["meta/target"] = target;
+    await ref.update(upd);
+  } catch (e) { flash("err", e.message); }
+}
+
+/* games created on this device (the admin's own games) */
+const MINE_KEY = "flip7v.mine";
+function loadMine() { try { return JSON.parse(localStorage.getItem(MINE_KEY)) || []; } catch { return []; } }
+function addMine(code, pid) { const l = loadMine().filter(m => m.code !== code); l.push({ code, pid }); localStorage.setItem(MINE_KEY, JSON.stringify(l)); }
+function removeMine(code) { localStorage.setItem(MINE_KEY, JSON.stringify(loadMine().filter(m => m.code !== code))); }
+function showTab(name) { const b = document.querySelector(`#tabs button[data-tab="${name}"]`); if (b) b.click(); }
+
+async function renderAdmin() {
+  const el = $("#admin");
+  if (!configured) { el.innerHTML = `<div class="card" data-i="!" style="--c:var(--red)"><h2>Admin</h2><div class="msg warn">Firebase is not configured.</div></div>`; return; }
+  const mine = loadMine();
+  if (!mine.length) { el.innerHTML = `<div class="card" data-i="A" style="--c:var(--green)"><h2>Admin</h2><p class="mute">No games yet. Games you create on this device show up here.</p></div>`; return; }
+  el.innerHTML = `<div class="card" data-i="A" style="--c:var(--green)"><h2>Admin</h2><p class="mute">Loading your games…</p></div>`;
+  const games = await Promise.all(mine.map(m => db.ref("games/" + m.code).once("value").then(s => s.val()).catch(() => null)));
+  const items = mine.map((m, i) => ({ m, g: games[i] })).sort((a, b) => ((b.g && b.g.meta.createdAt) || 0) - ((a.g && a.g.meta.createdAt) || 0));
+  el.innerHTML = `<button class="btn ghost" data-act="refresh" style="margin:0 0 18px">Refresh</button>` + items.map(({ m, g }, i) => {
+    const c = `var(--${PALETTE[i % PALETTE.length]})`;
+    if (!g || !g.meta) return `<div class="card" data-i="?" style="--c:${c}"><h2>${esc(m.code)}</h2><p class="mute">Game not found (deleted?).</p><button class="btn ghost" data-act="forget" data-code="${esc(m.code)}">Forget</button></div>`;
+    const meta = g.meta, players = Object.values(g.players || {}).map(p => esc(p.name)).join(", ");
+    const status = meta.status === "finished" ? "Finished" : `Round ${meta.round}`;
+    return `<div class="card" data-i="${meta.gameNo || 1}" style="--c:${c}"><h2>${esc(meta.name)}</h2>
+      <div class="codes">${[...m.code].map(ch => `<span class="pc" data-n="${esc(ch)}">${esc(ch)}</span>`).join("")}</div>
+      <div class="meta"><span class="pill">Game ${meta.gameNo || 1}</span><span class="pill">${status}</span><span class="pill">${meta.mode === "chip" ? "Chip" : "Normal"}</span><span class="pill">Target ${meta.target}</span></div>
+      <p><b>Players:</b> ${players || "–"}</p>
+      ${pastGamesHtml(g.history)}
+      <div class="row" style="align-items:stretch"><button class="btn" data-act="view" data-code="${esc(m.code)}">View</button><button class="btn ghost" data-act="forget" data-code="${esc(m.code)}">Forget</button></div></div>`;
+  }).join("");
+}
+
+$("#admin").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act, code = b.dataset.code;
+  if (act === "refresh") renderAdmin();
+  else if (act === "forget") { if (confirm(`Remove ${code} from this list? The game data is not deleted.`)) { removeMine(code); renderAdmin(); } }
+  else if (act === "view") { viewGame(code); showTab("score"); }
+});
+
+/* ---------- shared table renderers ---------- */
+function standingsHtml(d, meta, meId, finished, chip) {
+  return `<table><thead><tr><th>#  Player</th><th>Total</th>${chip ? "<th>Chips</th>" : ""}${finished ? "" : "<th>R" + meta.round + "</th>"}</tr></thead><tbody>` +
+    d.rows.map((r, i) => `<tr class="${r.id === meId ? "me" : ""}"><td class="name">${i + 1}. ${esc(r.name)}${r.id === meta.adminId ? " ★" : ""}</td><td class="tot">${r.total}</td>${chip ? `<td>${r.chips}</td>` : ""}${finished ? "" : `<td class="${r.sub ? "sent" : "wait"}">${r.sub ? "✓ sent" : "…"}</td>`}</tr>`).join("") +
+    `</tbody></table>`;
+}
+function historyHtml(d, chip) {
+  if (!d.rounds.length) return "";
+  return `<table><thead><tr><th>Player</th>${d.rounds.map(k => `<th>${k.toUpperCase()}</th>`).join("")}</tr></thead><tbody>` +
+    d.rows.map(r => `<tr><td class="name">${esc(r.name)}</td>${d.rounds.map(k => {
+      const x = r.hist[k];
+      if (!x) return `<td class="mute">–</td>`;
+      return `<td title="${x.sent ? "" : "no score sent"}">${x.bust ? `<span style="color:var(--bad)">0✗</span>` : x.points}${chip && x.bet ? `<span class="mute"> (${x.bet})</span>` : ""}</td>`;
+    }).join("")}</tr>`).join("") + `</tbody></table>`;
+}
+
+/* ---------- Scoreboard tab: read-only live view of one game (admin) ---------- */
+let viewRef = null;
+function viewGame(code) {
+  if (viewRef) viewRef.off();
+  viewRef = db.ref("games/" + code);
+  $("#score").innerHTML = `<div class="card" data-i="S" style="--c:var(--blue)"><h2>Scoreboard</h2><p class="mute">Loading…</p></div>`;
+  viewRef.on("value", snap => renderScore(code, snap.val()), err => {
+    $("#score").innerHTML = `<div class="card" data-i="!" style="--c:var(--red)"><h2>Scoreboard</h2><div class="msg err">${esc(err.message)}</div></div>`;
+  });
+}
+function renderScore(code, g) {
+  const el = $("#score");
+  if (!g || !g.meta) { el.innerHTML = `<div class="card" data-i="!" style="--c:var(--red)"><h2>Scoreboard</h2><p class="mute">Game not found.</p></div>`; return; }
+  const meta = g.meta, d = derive(g), chip = meta.mode === "chip", finished = meta.status === "finished", win = d.rows[0];
+  const open = new Set([...el.querySelectorAll("details.past[open]")].map(x => x.dataset.g)); // keep opened items open on live refresh
+  el.innerHTML =
+    (finished && win ? `<div class="banner">★ ${esc(win.name)} wins with ${win.total} points!</div>` : meta.tie ? `<div class="banner tie">Top score tied – one more round.</div>` : "") +
+    `<div class="card" data-i="${meta.gameNo || 1}" style="--c:var(--blue)"><div class="mute" style="font-size:.8rem">${esc(meta.name)}</div>
+      <div class="codes">${[...code].map(c => `<span class="pc" data-n="${esc(c)}">${esc(c)}</span>`).join("")}</div>
+      <div class="meta"><span class="pill">Game ${meta.gameNo || 1}</span><span class="pill">${finished ? "Finished" : "Round " + meta.round}</span><span class="pill">${chip ? "Chip" : "Normal"}</span><span class="pill">Target ${meta.target}</span></div></div>
+    <div class="card" data-i="★" style="--c:var(--yellow)"><h2>Standings</h2><div class="scroll">${standingsHtml(d, meta, null, finished, chip)}</div></div>` +
+    (d.rounds.length ? `<div class="card" data-i="H" style="--c:var(--teal)"><h3>Round history</h3><div class="scroll">${historyHtml(d, chip)}</div></div>` : "") +
+    (g.history ? `<div class="card" data-i="P" style="--c:var(--pink)"><h2>Past games</h2>${pastGamesHtml(g.history)}</div>` : "");
+  el.querySelectorAll("details.past").forEach(x => { if (open.has(x.dataset.g)) x.open = true; });
+}
+</script>
+</body>
+</html>
