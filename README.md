@@ -43,37 +43,6 @@ The game ends when at least one player has reached the target at the end of a ro
   Example: `(45 - 4 - 8) x 3 = 99`.
 - A bust scores 0 and loses the chips bet. Otherwise the chips are kept.
 
-## Setup
-
-### 1. Firebase (free Spark plan, no credit card)
-
-1. Go to <https://console.firebase.google.com> and create a project (skip Analytics).
-2. Open **Databases & Storage > Realtime Database > Create database**. Pick a region and start in test mode.
-3. Open **Project settings > Your apps > Web (`</>`)**, register the app and copy the `firebaseConfig` object.
-4. Copy `.env_example` to `.env` and paste the values in. Make sure `FIREBASE_DATABASE_URL` is included. `.env` is gitignored.
-5. Open **Realtime Database > Rules**, paste the following and **Publish**:
-
-```json
-{ "rules": { "games": { "$code": { ".read": true, ".write": true } } } }
-```
-
-Until the config exists, the Game tab shows a "Firebase not configured" message. The Rules and Chip twist tabs work without it.
-
-### 2. Run locally
-
-```sh
-node build-config.mjs        # reads .env, writes config.js (gitignored)
-python3 -m http.server 8000
-```
-
-Re-run `node build-config.mjs` whenever `.env` changes.
-
-Then open <http://localhost:8000>. To test with two players, use a normal window and a private window (separate localStorage).
-
-### 3. Deploy to Vercel
-
-`vercel.json` runs `node build-config.mjs` as the build command, which writes `config.js` from environment variables. In Vercel, add the `FIREBASE_*` variables from `.env_example` under **Project Settings > Environment Variables**, then import the repository (or run `npx vercel`).
-
 ## Security notes
 
 - `.env` and `config.js` are gitignored, so the Firebase config stays out of the repository. A browser app still has to download its config, so the `apiKey` is visible to anyone using the site. It only identifies the project and is not a password. Access is controlled by the database rules, so also restrict the key to your site's domain under **Google Cloud Console > APIs & Services > Credentials**.
