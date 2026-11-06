@@ -30,8 +30,7 @@ Round score, in this order:
 Special cards:
 
 - **The Zero**: scores 0 unless the player holds 7 cards including the Zero. Then the points count.
-- **Lucky 13**: allows one other 13. A third 13 is a bust.
-- Any duplicate number card is a bust.
+- **Lucky 13**: the only card that can be held together with the 13. There are no other duplicates.
 
 The game ends when at least one player has reached the target at the end of a round and the top score is not tied. A tied top score means one more round.
 

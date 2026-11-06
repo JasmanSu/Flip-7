@@ -110,8 +110,9 @@
   .picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:12px 10px;margin:8px 0 10px}
   .fc{position:relative;display:block;width:100%;aspect-ratio:5/7;padding:0;margin:0;border:2px solid #b3a47a;border-radius:5px;background:var(--face,var(--cream));color:var(--c,var(--ink));
     box-shadow:inset 0 0 0 3px var(--face,var(--cream)),inset 0 0 0 5px var(--c,var(--ink)),2px 3px 0 rgba(0,0,0,.55);font-family:Impact,"Arial Black",system-ui,sans-serif;text-align:center;overflow:hidden}
-  button.fc{cursor:pointer;opacity:.62;transition:transform .12s,opacity .12s}
-  button.fc.on,button.fc.power{opacity:1}
+  button.fc{cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;opacity:.62;transition:transform .12s,opacity .12s}
+  button.fc.on{opacity:1}
+  .hand button.fc{opacity:1}
   button.fc.on{transform:translateY(-7px);box-shadow:inset 0 0 0 3px var(--face,var(--cream)),inset 0 0 0 5px var(--c,var(--ink)),3px 9px 0 rgba(0,0,0,.55)}
   button.fc:active{transform:translateY(-2px)}
   .fc::before{content:"";position:absolute;top:6px;left:50%;width:16px;height:4px;margin-left:-8px;background:var(--c,var(--ink));border-radius:0 0 3px 3px}
@@ -121,7 +122,6 @@
   .fc.power{--face:#e8553d;--c:#f6c453;background:radial-gradient(circle at 50% 40%,#f0735c,#d9442c)}
   .fc.power .n{color:#fff}
   .fc.power .w{background:#fff3d6;border-color:#7a1d0c}
-  .fc[data-c]::after{content:"x" attr(data-c);position:absolute;top:4px;right:4px;padding:0 4px;background:var(--bad);color:#fff;border-radius:3px;font:900 .6rem/1.4 system-ui,sans-serif}
   .hand{display:flex;flex-wrap:wrap;gap:10px;align-items:center;min-height:30px}
   .hand .fc{width:52px}
   .hand .fc .w{display:none}
@@ -518,33 +518,32 @@ const luckyCard = k => faceCard({ k, label: "13", word: "LUCKY", kind: "candy", 
     <div class="picker">${zeroCard()}${luckyCard()}</div>
     <ul>
       <li><b>The Zero</b>: scores 0, unless you hold 7 cards including the Zero. Then your points count.</li>
-      <li><b>Lucky 13</b>: you may have one other 13. A third 13 is a bust.</li>
+      <li><b>Lucky 13</b>: the only card that can be held together with the 13.</li>
     </ul>`;
 })();
 
 /* ---------- calculator (tap your cards, total is computed) ---------- */
 let K = { nums: [], minus: [], half: false, zero: false, lucky: false, bust: false, bet: 0 };
-const dupNumber = () => K.nums.find(n => K.nums.filter(x => x === n).length >= 2);
-const cardCount = () => new Set(K.nums).size + (K.zero ? 1 : 0) + (K.lucky ? 1 : 0);
+const cardCount = () => K.nums.length + (K.zero ? 1 : 0) + (K.lucky ? 1 : 0);
 
 function buildCalc(me) {
   const chip = S.game.meta.mode === "chip", s = me.sub || {}, saved = s.numCards || [];
-  K = { nums: saved.filter(n => n >= 1), minus: (s.minusCards || []).slice(), half: !!s.half,
-    zero: !!s.cardZero || saved.includes(0), lucky: !!s.cardLucky, bust: s.manualBust !== undefined ? !!s.manualBust : !!s.bust && !saved.some((n, i) => saved.indexOf(n) !== i), bet: s.bet || 0 };
+  K = { nums: [...new Set(saved.filter(n => n >= 1))], minus: [...new Set(s.minusCards || [])], half: !!s.half,
+    zero: !!s.cardZero || saved.includes(0), lucky: !!s.cardLucky, bust: s.manualBust !== undefined ? !!s.manualBust : !!s.bust, bet: s.bet || 0 };
   const box = $("#g-calc");
   box.innerHTML = `<div class="card" data-i="${S.game.meta.round}" style="--c:var(--purple)"><h2>My round ${S.game.meta.round} cards</h2>
-    <h3>Number cards <span class="mute">(tap twice = duplicate = bust, third tap removes)</span></h3>
+    <h3>Number cards <span class="mute">(tap again to remove)</span></h3>
     <div class="picker">${NUM_CARDS.map(n => numCard(n, "n")).join("")}</div>
-    <h3>Power cards <span class="mute">(tap minus cards to add)</span></h3>
+    <h3>Power cards <span class="mute">(tap again to remove)</span></h3>
     <div class="picker">${POWER_MINUS.map(n => minusCard(n, "m")).join("")}${halfCard("half")}</div>
     <h3>Special cards</h3>
     <div class="picker">${zeroCard("zero")}${luckyCard("lucky")}</div>
-    <p class="mute" style="font-size:.8rem;margin:4px 0 0">Lucky 13 lets you hold one other 13. A third 13 is a bust.</p>
+    <p class="mute" style="font-size:.8rem;margin:4px 0 0">Lucky 13 is the only card that can be held together with the 13.</p>
     ${chip ? `<h3>Chips to bet <span id="k-have" class="mute"></span></h3>
     <div class="stepper"><button type="button" data-k="bm">−</button><div id="k-bet">0</div><button type="button" data-k="bp">+</button></div>` : ""}
     <h3>Your hand</h3>
     <div class="hand" id="k-hand"></div>
-    <button type="button" class="tg" data-k="bust" style="--c:var(--red);width:100%">Busted (flipped a duplicate)</button>
+    <button type="button" class="tg" data-k="bust" style="--c:var(--red);width:100%">Busted</button>
     <div class="result" id="k-res"></div>
     <div id="k-err"></div>
     <button class="btn" id="k-send">Send my score</button>
@@ -553,8 +552,8 @@ function buildCalc(me) {
   box.onclick = e => {
     const b = e.target.closest("[data-k]"); if (!b) return;
     const k = b.dataset.k, v = Number(b.dataset.v), me2 = currentMe();
-    if (k === "n") { const c = K.nums.filter(x => x === v).length; K.nums = K.nums.filter(x => x !== v); for (let j = 0; j < (c + 1) % 3; j++) K.nums.push(v); } // 0 -> 1 -> 2 (duplicate) -> 0
-    else if (k === "m") K.minus.push(v);
+    if (k === "n") K.nums = K.nums.includes(v) ? K.nums.filter(x => x !== v) : [...K.nums, v];
+    else if (k === "m") K.minus = K.minus.includes(v) ? K.minus.filter(x => x !== v) : [...K.minus, v];
     else if (k === "mr") K.minus.splice(Number(b.dataset.i), 1);
     else if (k === "half") K.half = !K.half;
     else if (k === "zero") K.zero = !K.zero;
@@ -563,6 +562,16 @@ function buildCalc(me) {
     else if (k === "bm") K.bet = Math.max(0, K.bet - 1);
     else if (k === "bp") K.bet = Math.min(me2.chips, K.bet + 1);
     updateCalc(me2);
+  };
+  // a double click/tap never counts a card twice: it simply switches that card off
+  box.ondblclick = e => {
+    const b = e.target.closest("[data-k]"); if (!b) return;
+    const k = b.dataset.k, v = Number(b.dataset.v);
+    if (k === "n") K.nums = K.nums.filter(x => x !== v);
+    else if (k === "m") K.minus = K.minus.filter(x => x !== v);
+    else if (["half", "zero", "lucky"].includes(k)) K[k] = false;
+    else return;
+    updateCalc(currentMe());
   };
   $("#k-send").onclick = sendScore;
 }
@@ -574,7 +583,7 @@ function readCalc(me) {
   const v = {
     nums: K.nums.reduce((a, b) => a + b, 0) + (K.lucky ? 13 : 0),
     minus: K.minus.reduce((a, b) => a + b, 0), bet: chip ? K.bet : 0,
-    half: K.half, flip7: count >= 7, bust: K.bust || dupNumber() !== undefined, zero: K.zero && count < 7, chip };
+    half: K.half, flip7: count >= 7, bust: K.bust, zero: K.zero && count < 7, chip };
   const err = chip && v.bet > me.chips ? `You only have ${me.chips} chips.` : "";
   return { v, err };
 }
@@ -585,9 +594,8 @@ function updateCalc(me) {
   if (chip && K.bet > me.chips) K.bet = me.chips; // chips can shrink if a round closes
   const { v, err } = readCalc(me), r = calcScore(v), count = cardCount();
 
-  const isOn = (k, val) => k === "n" ? K.nums.includes(val) : ["half", "zero", "lucky", "bust"].includes(k) ? !!K[k] : false;
-  document.querySelectorAll("#g-calc [data-k=n]").forEach(b => { const c = K.nums.filter(x => x === Number(b.dataset.v)).length; if (c >= 2) b.dataset.c = c; else delete b.dataset.c; });
-  document.querySelectorAll("#g-calc [data-k]").forEach(b => { if (b.dataset.k !== "m") b.classList.toggle("on", isOn(b.dataset.k, Number(b.dataset.v))); });
+  const isOn = (k, val) => k === "n" ? K.nums.includes(val) : k === "m" ? K.minus.includes(val) : ["half", "zero", "lucky", "bust"].includes(k) ? !!K[k] : false;
+  document.querySelectorAll("#g-calc [data-k]").forEach(b => { if (b.dataset.k !== "mr") b.classList.toggle("on", isOn(b.dataset.k, Number(b.dataset.v))); });
   if ($("#k-have")) $("#k-have").textContent = `(you have ${me.chips})`;
   if ($("#k-bet")) $("#k-bet").textContent = K.bet;
 
@@ -598,12 +606,7 @@ function updateCalc(me) {
     : `<span class="mute">No cards yet. Tap your cards above.</span>`;
 
   let txt, sub = "";
-  if (v.bust) {
-    const d = dupNumber();
-    txt = "Bust – 0 points";
-    sub = d === undefined ? "" : d === 13 && K.lucky ? "third 13" : `duplicate ${d}`;
-    if (v.chip && v.bet) sub += `${sub ? " · " : ""}you lose ${v.bet} chip${v.bet === 1 ? "" : "s"}`;
-  }
+  if (v.bust) { txt = "Bust – 0 points"; if (v.chip && v.bet) sub = `you lose ${v.bet} chip${v.bet === 1 ? "" : "s"}`; }
   else if (v.zero) { txt = "The Zero: no points yet"; sub = `needs 7 cards including the Zero (you have ${count})`; }
   else {
     txt = v.chip ? `Score ${r.base} x ${r.mult} = ${r.points} points` : `Score ${r.points} points`;
