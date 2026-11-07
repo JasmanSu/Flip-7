@@ -10,7 +10,7 @@ No build step, no frameworks. Plain HTML, CSS and JavaScript, plus the Firebase 
 - **Chip twist** tab: the chip house rules with a worked example.
 - **Game** tab: create or join a game and send your score.
   - Admin creates a game (name, Normal or Chip mode, target score) and gets a 5-character join code (no ambiguous characters, checked to be unused). The admin plays too.
-  - Players join with a name and the code. Late joiners get `5 + 2 x current round` chips in Chip mode.
+  - Players join with a name and the code. Late joiners get `5 + 2 x rounds already played` chips in Chip mode.
   - Each player taps the cards they hold and the score is calculated live, for example `Score 33 x 3 = 99 points`. Scores can be resent until the round closes.
   - Admin closes the round (`Close round (n/total sent)`), or ends the game early with **End this game** if nobody has reached the target.
   - When a game finishes, the admin can start a **new game with the same code and players**. The finished game is saved under *Past games*, with a win tally.
@@ -36,7 +36,7 @@ The game ends when at least one player has reached the target at the end of a ro
 
 ### Chip twist (Chip mode only)
 
-- One chip type, each worth 1. Everyone starts with 5 chips and receives 2 more every round (including round 1). Chips carry over.
+- One chip type, each worth 1. Everyone starts round 1 with 5 chips and receives 2 more when each round ends. Chips carry over.
 - Before flipping, each player bets any number of chips they hold. Betting 0 counts as x1.
 - After normal scoring (including the +15 bonus) the round score is multiplied by the chips bet.
   Example: `(45 - 4 - 8) x 3 = 99`.
@@ -60,4 +60,4 @@ games/{code}/
   history/g{n}       finished games: winner, standings and per-round results
 ```
 
-Chips are derived, not stored: `5 + 2 x round - chips lost on busts in closed rounds`.
+Chips are derived, not stored: `5 + 2 x (round - 1) - chips lost on busts in closed rounds`.

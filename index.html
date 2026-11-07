@@ -8,24 +8,33 @@
 <style>
   :root{--ink:#14122b;--cream:#fff8e8;--paper:#f3ead2;--mute:#6b6684;--line:#d9cfb4;
     --red:#e63946;--blue:#2a6fdb;--green:#23975a;--orange:#f4802a;--purple:#7b3fe4;--yellow:#f2c230;--pink:#e0529c;--teal:#1a9fa0;
-    --ok:#1b7f4b;--bad:#c62839}
+    --ok:#1b7f4b;--bad:#c62839;
+    --page-text:#fff8e8;--accent:#f2c230;--accent-2:#f2c230;--nav-bg:rgba(12,10,31,.92);--nav-line:#2b2650;
+    --seg-bg:#1b1740;--seg-text:#fff8e8;--seg-line:#4a4380;color-scheme:dark;
+    --title-color:#fff8e8;--title-shadow:3px 3px 0 #e63946;
+    --page-bg:radial-gradient(circle at 20% 10%,rgba(123,63,228,.25),transparent 45%),radial-gradient(circle at 85% 30%,rgba(230,57,70,.18),transparent 40%),repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 12px,transparent 12px 24px),#0c0a1f}
+  [data-theme="light"]{--page-text:#14122b;--accent:#d9930a;--accent-2:#5e3c00;--nav-bg:rgba(236,228,207,.92);--nav-line:#cdbf98;
+    --seg-bg:#fff8e8;--seg-text:#14122b;--seg-line:#14122b;color-scheme:light;
+    --title-color:#fff8e8;--title-shadow:-2px 0 #14122b,2px 0 #14122b,0 -2px #14122b,0 2px #14122b,-2px -2px #14122b,2px -2px #14122b,-2px 2px #14122b,2px 2px #14122b,3px 3px 0 #14122b,4px 4px 0 #14122b,6px 6px 0 #e63946;
+    --page-bg:radial-gradient(circle at 20% 10%,rgba(123,63,228,.12),transparent 45%),radial-gradient(circle at 85% 30%,rgba(230,57,70,.10),transparent 40%),repeating-linear-gradient(45deg,rgba(20,18,43,.035) 0 12px,transparent 12px 24px),#ece4cf}
   *{box-sizing:border-box}
-  html,body{margin:0;color:var(--cream);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-text-size-adjust:100%}
-  body{min-height:100vh;padding-bottom:env(safe-area-inset-bottom);
-    background:
-      radial-gradient(circle at 20% 10%,rgba(123,63,228,.25),transparent 45%),
-      radial-gradient(circle at 85% 30%,rgba(230,57,70,.18),transparent 40%),
-      repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 12px,transparent 12px 24px),
-      #0c0a1f}
+  html,body{margin:0;color:var(--page-text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  body{min-height:100vh;padding-bottom:env(safe-area-inset-bottom);background:var(--page-bg)}
+
+  /* ---------- theme switch ---------- */
+  .theme{display:inline-flex;margin-bottom:12px;border:2px solid var(--seg-line);border-radius:5px;overflow:hidden;background:var(--seg-bg)}
+  .theme button{padding:7px 12px;border:0;background:transparent;color:var(--seg-text);font:800 .72rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  .theme button+button{border-left:2px solid var(--seg-line)}
+  .theme button.on{background:var(--yellow);color:var(--ink)}
 
   /* ---------- header: fan of cards ---------- */
   header{padding:22px 16px 6px;text-align:center}
   .fan{display:flex;justify-content:center;height:92px;margin-bottom:6px}
   .fan .pc{margin-left:-16px;transform-origin:50% 120%}
   .fan .pc:first-child{margin-left:0}
-  header h1{margin:6px 0 0;font:900 1.7rem/1.05 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--cream);text-shadow:3px 3px 0 var(--red)}
+  header h1{margin:6px 0 0;font:900 1.7rem/1.05 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--title-color);text-shadow:var(--title-shadow)}
   header h1 span{color:var(--yellow);font-size:2.3rem;vertical-align:-3px}
-  header .sub{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--yellow);margin-top:6px}
+  header .sub{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent-2);margin-top:6px}
 
   /* ---------- playing card (mini) ---------- */
   .pc{position:relative;display:inline-flex;align-items:center;justify-content:center;width:56px;height:78px;background:var(--cream);color:var(--c,var(--ink));
@@ -37,7 +46,7 @@
   .hand{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:12px 0}
 
   /* ---------- tabs = cards ---------- */
-  nav{position:sticky;top:0;z-index:5;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:12px 12px 10px;background:rgba(12,10,31,.92);backdrop-filter:blur(6px);border-bottom:2px solid #2b2650}
+  nav{position:sticky;top:0;z-index:5;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:12px 12px 10px;background:var(--nav-bg);backdrop-filter:blur(6px);border-bottom:2px solid var(--nav-line)}
   nav button{flex:1 0 auto;padding:12px 14px;border:3px solid var(--ink);border-radius:5px;background:var(--cream);color:var(--ink);font:900 .8rem Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:3px 3px 0 #000;transition:transform .12s}
   nav button.on{background:var(--yellow);transform:translateY(-3px) rotate(-1.5deg);box-shadow:4px 6px 0 #000}
   nav::-webkit-scrollbar{display:none}
@@ -103,6 +112,13 @@
   .banner{text-align:center;padding:16px;border-radius:8px;border:3px solid var(--ink);background:var(--yellow);color:var(--ink);font:900 1.3rem Impact,"Arial Black",sans-serif;letter-spacing:.04em;text-transform:uppercase;margin-bottom:18px;box-shadow:5px 6px 0 rgba(0,0,0,.6)}
   .banner.tie{background:var(--orange)}
   .setup li{margin:8px 0}
+  /* poker chip: each chip is worth 1 */
+  .chiprow{margin:8px 0;min-height:30px;display:flex;align-items:center}
+  .chips{display:inline-flex;align-items:center}
+  .chip{position:relative;display:inline-block;width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);background:repeating-conic-gradient(#fff 0 20deg,#c62839 20deg 40deg);box-shadow:1px 2px 0 rgba(0,0,0,.55)}
+  .chip::after{content:"1";position:absolute;inset:5px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1.5px dashed #fff;background:#c62839;color:#fff;font:900 .6rem/1 Impact,"Arial Black",sans-serif}
+  .chip+.chip{margin-left:-17px}
+  .chipn{margin-left:12px;font:900 1rem Impact,"Arial Black",sans-serif;color:var(--ink);white-space:nowrap}
   button.rm{width:28px;height:28px;padding:0;border:2px solid var(--ink);border-radius:3px;background:#fff;color:var(--bad);font:900 .85rem system-ui;cursor:pointer}
   .mini{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}
   .mini .fc{width:34px;cursor:default}
@@ -128,7 +144,15 @@
   .fc::before{content:"";position:absolute;top:6px;left:50%;width:16px;height:4px;margin-left:-8px;background:var(--c,var(--ink));border-radius:0 0 3px 3px}
   .fc .n{position:absolute;left:0;right:0;top:50%;transform:translateY(-58%);font-size:2.1rem;line-height:1;color:var(--c,var(--ink))}
   .fc .n.l{font-size:1.6rem}
+  /* black outline around every card number */
+  .fc{--sw:1.5px}
+  .hand .fc,.mini .fc{--sw:1px}
+  .fc .n{text-shadow:calc(-1*var(--sw)) 0 #000,var(--sw) 0 #000,0 calc(-1*var(--sw)) #000,0 var(--sw) #000,calc(-1*var(--sw)) calc(-1*var(--sw)) #000,var(--sw) calc(-1*var(--sw)) #000,calc(-1*var(--sw)) var(--sw) #000,var(--sw) var(--sw) #000}
   .fc .w{position:absolute;left:7px;right:7px;bottom:8px;padding:1px 0;background:#fff;border:1px solid var(--c,var(--ink));color:var(--ink);font:700 .5rem/1.3 system-ui,sans-serif;letter-spacing:.05em;white-space:nowrap}
+  .fc.candy{--face:#e2d7f6;border:4px solid transparent;
+    background:radial-gradient(circle at 50% 40%,#efe8fb,#d5c7f0) padding-box,linear-gradient(135deg,#e63946,#f4802a,#f2c230,#23975a,#2a6fdb,#7b3fe4,#e0529c) border-box;
+    box-shadow:inset 0 0 0 2px var(--face),2px 3px 0 rgba(0,0,0,.55)}
+  button.fc.candy.on{box-shadow:inset 0 0 0 2px var(--face),3px 9px 0 rgba(0,0,0,.55)}
   .fc.power{--face:#e8553d;--c:#f6c453;background:radial-gradient(circle at 50% 40%,#f0735c,#d9442c)}
   .fc.power .n{color:#fff}
   .fc.power .w{background:#fff3d6;border-color:#7a1d0c}
@@ -142,11 +166,33 @@
   .stepper{display:flex;gap:10px;align-items:stretch}
   .stepper button{width:64px;height:56px;border:3px solid var(--ink);border-radius:4px;background:var(--paper);color:var(--ink);font:900 1.6rem Impact,"Arial Black",sans-serif;cursor:pointer;box-shadow:2px 3px 0 var(--ink)}
   .stepper button:active{transform:translate(1px,2px);box-shadow:none}
+  .stepper input{flex:1;min-width:0;height:56px;text-align:center;font:900 1.8rem Impact,"Arial Black",sans-serif}
   .stepper div{flex:1;display:flex;align-items:center;justify-content:center;border:3px solid var(--ink);border-radius:4px;background:#fff;font:900 1.8rem Impact,"Arial Black",sans-serif}
 </style>
+<script>
+/* apply the saved theme before first paint (Light, Dark or System) */
+(function () {
+  var K = "flip7v.theme", mq = window.matchMedia("(prefers-color-scheme: dark)");
+  function pref() { try { return localStorage.getItem(K) || "system"; } catch (e) { return "system"; } }
+  window.applyTheme = function () {
+    var p = pref(), dark = p === "dark" || (p === "system" && mq.matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute("content", dark ? "#0c0a1f" : "#ece4cf");
+    document.querySelectorAll("[data-theme-set]").forEach(function (b) { var on = b.dataset.themeSet === p; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+  };
+  window.setTheme = function (v) { try { localStorage.setItem(K, v); } catch (e) {} window.applyTheme(); };
+  if (mq.addEventListener) mq.addEventListener("change", window.applyTheme); else mq.addListener(window.applyTheme);
+  window.applyTheme();
+})();
+</script>
 </head>
 <body>
 <header>
+  <div class="theme" role="group" aria-label="Colour theme">
+    <button type="button" data-theme-set="light">☀ Light</button>
+    <button type="button" data-theme-set="dark">☾ Dark</button>
+    <button type="button" data-theme-set="system">◐ System</button>
+  </div>
   <div class="fan" aria-hidden="true">
     <span class="pc" style="--c:var(--red);transform:rotate(-20deg)" data-n="7">7</span>
     <span class="pc" style="--c:var(--blue);transform:rotate(-10deg)" data-n="12">12</span>
@@ -213,11 +259,11 @@
     <p>House rule. Chips are score multipliers, used only in <b>Chip mode</b>. Normal mode is the same game without chips.</p>
     <ul>
       <li>One chip type, each worth <b>1</b>.</li>
-      <li>Everyone starts with <b>5 chips</b> and receives <b>2 more every round</b>, including round 1. Chips carry over.</li>
+      <li>Everyone starts round 1 with <b>5 chips</b> and receives <b>2 more when each round ends</b>. Chips carry over.</li>
       <li>Before flipping, bet <b>any number of chips</b> you hold. Betting 0 counts as <b>x1</b>.</li>
       <li>After normal scoring (including the +15 bonus), the round score is <b>multiplied by the chips bet</b>.</li>
       <li>If you <b>bust</b>: you score 0 and <b>lose the chips you bet</b>. Otherwise you keep them.</li>
-      <li>Late joiners get <b>5 + 2 x current round</b> chips.</li>
+      <li>Late joiners get <b>5 + 2 x rounds already played</b> chips, the same as a player who never lost chips.</li>
     </ul>
   </div>
   <div class="card" data-i="99" style="--c:var(--pink)">
@@ -280,6 +326,10 @@ const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const configured = !/YOUR_/.test(CFG.apiKey + CFG.databaseURL) && !!CFG.databaseURL;
 
+/* ---------- theme switch ---------- */
+document.querySelector(".theme").addEventListener("click", e => { const b = e.target.closest("[data-theme-set]"); if (b) setTheme(b.dataset.themeSet); });
+applyTheme(); // mark the active button now that the buttons exist
+
 /* ---------- tabs ---------- */
 $("#tabs").addEventListener("click", e => {
   const b = e.target.closest("button[data-tab]"); if (!b) return;
@@ -316,7 +366,8 @@ function derive(g) {
   const rows = Object.entries(g.players || {}).map(([id, p]) => {
     let total = 0, lost = 0; const hist = {};
     for (const k in results) { const x = results[k] && results[k][id]; if (x) { total += x.points; lost += x.lost || 0; hist[k] = x; } }
-    return { id, name: p.name, total, chips: START_CHIPS + CHIPS_PER_ROUND * meta.round - lost, hist, sub: subs[id] };
+    // chips: 5 at the start, +2 received when each round ends, minus chips lost on busts
+    return { id, name: p.name, total, chips: START_CHIPS + CHIPS_PER_ROUND * (meta.round - 1) - lost, hist, sub: subs[id] };
   }).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
   return { rows, sent: rows.filter(r => r.sub).length, rounds: Object.keys(results).sort((a, b) => a.slice(1) - b.slice(1)) };
 }
@@ -466,6 +517,7 @@ function renderGame(el) {
       <div id="g-calc"></div>
       <div id="g-admin"></div>
       <div class="card" data-i="★" style="--c:var(--yellow)"><h2>Standings</h2><div class="scroll" id="g-stand"></div></div>
+      <div class="card" id="g-checkcard" data-i="✓" style="--c:var(--orange)" hidden><h2>Check cards</h2><p class="mute">Cards each player sent, to double check before closing a round.</p><div id="g-check"></div></div>
       <div class="card" id="g-histcard" data-i="H" style="--c:var(--teal)"><h3>Round history</h3><div class="scroll" id="g-hist"></div></div>
       <div class="card" id="g-pastcard" data-i="P" style="--c:var(--pink)"><h2>Past games</h2><div id="g-past"></div></div>
       <button class="btn ghost" id="b-leave">Leave game on this device</button>`;
@@ -491,6 +543,14 @@ function patchGame(d, me, isAdmin, finished, winner, chip) {
   $("#g-histcard").hidden = !d.rounds.length;
   $("#g-hist").innerHTML = historyHtml(d, chip);
 
+  // admin only: cards of the open round (live) and of every closed round
+  $("#g-checkcard").hidden = !isAdmin;
+  if (isAdmin) {
+    const el = $("#g-check"), open = new Set([...el.querySelectorAll("details[open]")].map(x => x.dataset.g));
+    el.innerHTML = checkHtml(d, meta, chip, finished);
+    el.querySelectorAll("details").forEach(x => { if (open.has(x.dataset.g)) x.open = true; }); // keep opened rounds open on live refresh
+  }
+
   // admin
   const adm = $("#g-admin");
   if (isAdmin && !finished) {
@@ -515,6 +575,9 @@ function patchGame(d, me, isAdmin, finished, winner, chip) {
 /* ---------- card faces ---------- */
 const WORDS = ["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN"];
 const PALETTE = ["red", "blue", "green", "orange", "purple", "pink", "teal"];
+// number card colours follow the physical deck
+const NUM_COLORS = { 1: "#8b8580", 2: "#a6c23a", 3: "#e2414f", 4: "#2fa3c7", 5: "#37ad4a", 6: "#8e44c4", 7: "#d9566a",
+  8: "#78bd4c", 9: "#f08a24", 10: "#d7263d", 11: "#5b8fd9", 12: "#80807f", 13: "#2d6cd3" };
 const NUM_CARDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 const POWER_MINUS = [2, 4, 6, 8, 10];
 const MAX_NUMBER_CARDS = 7; // different number cards (special and power cards do not count)
@@ -525,11 +588,11 @@ function faceCard({ k, v, i, label, word, kind, color, title }) {
   const long = String(label).length > 2 ? " l" : "";
   return `<${t} class="fc ${kind}"${attrs}${color ? ` style="--c:${color}"` : ""}><span class="n${long}">${esc(label)}</span><span class="w">${esc(word)}</span></${t}>`;
 }
-const numCard = (n, k) => faceCard({ k, v: n, label: n, word: WORDS[n], kind: "num", color: `var(--${PALETTE[n % PALETTE.length]})` });
+const numCard = (n, k) => faceCard({ k, v: n, label: n, word: WORDS[n], kind: "num", color: NUM_COLORS[n] });
 const minusCard = (n, k, i) => faceCard({ k, v: n, i, label: `-${n}`, word: "POWER", kind: "power", title: k ? "Tap to remove" : "" });
 const halfCard = k => faceCard({ k, label: "÷2", word: "POWER", kind: "power" });
-const zeroCard = k => faceCard({ k, label: "0", word: "THE ZERO", kind: "candy", color: "var(--purple)" });
-const luckyCard = k => faceCard({ k, label: "13", word: "LUCKY", kind: "candy", color: "var(--blue)" });
+const zeroCard = k => faceCard({ k, label: "0", word: "THE ZERO", kind: "candy", color: "#6a35c9" });
+const luckyCard = k => faceCard({ k, label: "13", word: "LUCKY", kind: "candy", color: "#c2307f" });
 
 /* Rules tab gallery */
 (function () {
@@ -563,8 +626,11 @@ function buildCalc(me) {
     <h3>Special cards</h3>
     <div class="picker">${zeroCard("zero")}${luckyCard("lucky")}</div>
     <p class="mute" style="font-size:.8rem;margin:4px 0 0">Lucky 13 is the only card that can be held together with the 13.</p>
-    ${chip ? `<h3>Chips to bet <span id="k-have" class="mute"></span></h3>
-    <div class="stepper"><button type="button" data-k="bm">−</button><div id="k-bet">0</div><button type="button" data-k="bp">+</button></div>` : ""}
+    ${chip ? `<div class="chipbox"><h3>Chips to bet <span id="k-have" class="mute"></span></h3>
+      <div class="stepper"><button type="button" data-k="bm">−</button><input type="number" id="k-bet" inputmode="numeric" min="0" value="${K.bet}" aria-label="Chips to bet"><button type="button" data-k="bp">+</button></div>
+      <div class="chiprow" id="k-chips"></div>
+      <p class="mute" style="font-size:.8rem;margin:6px 0 0">Your round score is multiplied by the chips you bet (0 counts as x1). <b id="k-mult"></b> If you bust, you lose the chips you bet.</p></div>`
+      : `<p class="mute" style="font-size:.8rem;margin:0 0 4px">Normal mode: no chips. Create a Chip mode game to bet chips.</p>`}
     <h3>Your hand</h3>
     <div class="hand" id="k-hand"></div>
     <button type="button" class="tg" data-k="bust" style="--c:var(--red);width:100%">Busted</button>
@@ -597,6 +663,12 @@ function buildCalc(me) {
     else return;
     updateCalc(currentMe());
   };
+  box.oninput = e => {
+    if (e.target.id !== "k-bet") return;
+    const n = parseInt(e.target.value, 10);
+    K.bet = isNaN(n) ? 0 : Math.max(0, n);
+    updateCalc(currentMe());
+  };
   $("#k-send").onclick = sendScore;
 }
 
@@ -615,7 +687,8 @@ function readCalc(me) {
 function updateCalc(me) {
   if (!$("#k-res") || !me) return;
   const chip = S.game.meta.mode === "chip";
-  if (chip && K.bet > me.chips) K.bet = me.chips; // chips can shrink if a round closes
+  const betBefore = K.bet;
+  if (chip && K.bet > me.chips) K.bet = me.chips; // cannot bet more than you hold (chips can also shrink when a round closes)
   const { v, err } = readCalc(me), r = calcScore(v), count = cardCount();
 
   const isOn = (k, val) => k === "n" ? K.nums.includes(val) : k === "m" ? K.minus.includes(val) : ["half", "zero", "lucky", "bust"].includes(k) ? !!K[k] : false;
@@ -623,7 +696,10 @@ function updateCalc(me) {
   document.querySelectorAll("#g-calc [data-k=n]").forEach(b => { b.disabled = !K.nums.includes(Number(b.dataset.v)) && K.nums.length >= MAX_NUMBER_CARDS; });
   $("#k-numcount").textContent = `(${K.nums.length}/${MAX_NUMBER_CARDS} different, tap again to remove)`;
   if ($("#k-have")) $("#k-have").textContent = `(you have ${me.chips})`;
-  if ($("#k-bet")) $("#k-bet").textContent = K.bet;
+  const bi = $("#k-bet");
+  if (bi && (document.activeElement !== bi || betBefore !== K.bet)) bi.value = K.bet; // do not fight the user while typing
+  if ($("#k-chips")) $("#k-chips").innerHTML = chipsHtml(K.bet);
+  if ($("#k-mult")) $("#k-mult").textContent = `Multiplier: x${Math.max(K.bet, 1)}.`;
 
   const nums = [...K.nums].sort((a, b) => a - b);
   $("#k-hand").innerHTML = count || K.minus.length
@@ -813,18 +889,36 @@ function historyHtml(d, chip) {
     }).join("")}</tr>`).join("") + `</tbody></table>`;
 }
 
-function cardsRowHtml(x) {
+function chipsHtml(n) {
+  if (!n || n < 1) return `<span class="mute">no chips bet</span>`;
+  const shown = Math.min(n, 10);
+  return `<span class="chips" title="${n} chip${n === 1 ? "" : "s"} bet">${'<i class="chip"></i>'.repeat(shown)}<b class="chipn">${n} chip${n === 1 ? "" : "s"}${n > shown ? " (+" + (n - shown) + " not drawn)" : ""}</b></span>`;
+}
+function cardsRowHtml(x, chip) {
   if (!x || !x.sent) return `<span class="mute">no score sent</span>`;
   const nums = [...(x.numCards || [])].sort((a, b) => a - b);
-  return `<span class="mini">${x.cardZero ? zeroCard() : ""}${nums.map(n => numCard(n)).join("")}${x.cardLucky ? luckyCard() : ""}${(x.minusCards || []).map(n => minusCard(n)).join("")}${x.half ? halfCard() : ""}</span>${x.bust ? ` <span class="busttag">BUST</span>` : ""}`;
+  return (chip ? `<div class="chiprow">${chipsHtml(x.bet)}</div>` : "") + `<span class="mini">${x.cardZero ? zeroCard() : ""}${nums.map(n => numCard(n)).join("")}${x.cardLucky ? luckyCard() : ""}${(x.minusCards || []).map(n => minusCard(n)).join("")}${x.half ? halfCard() : ""}</span>${x.bust ? ` <span class="busttag">BUST</span>` : ""}`;
 }
 function roundDetailsHtml(d, chip) {
   return d.rounds.slice().reverse().map(k => `<details class="past" data-g="${k}"><summary>Round ${k.slice(1)}</summary>` +
     d.rows.map(r => {
       const x = r.hist[k];
       const tot = x ? `${x.points} pts${chip && x.sent && !x.bust ? ` <span class="mute">(${x.base} x ${x.mult})</span>` : ""}` : "0 pts";
-      return `<div class="rd"><div class="rd-h"><b>${esc(r.name)}</b><span class="rd-t">${tot}</span></div>${x ? cardsRowHtml(x) : `<span class="mute">–</span>`}</div>`;
+      return `<div class="rd"><div class="rd-h"><b>${esc(r.name)}</b><span class="rd-t">${tot}</span></div>${x ? cardsRowHtml(x, chip) : `<span class="mute">–</span>`}</div>`;
     }).join("") + `</details>`).join("");
+}
+
+function checkHtml(d, meta, chip, finished) {
+  let out = "";
+  if (!finished) {
+    out += `<h3>Round ${meta.round} (open, ${d.sent}/${d.rows.length} sent)</h3>` + d.rows.map(r => {
+      const x = r.sub;
+      const tot = x ? `${x.points} pts${chip && !x.bust ? ` <span class="mute">(${x.base} x ${x.mult})</span>` : ""}` : "–";
+      return `<div class="rd" style="padding-left:0;padding-right:0"><div class="rd-h"><b>${esc(r.name)}</b><span class="rd-t">${tot}</span></div>${x ? cardsRowHtml({ ...x, sent: true }, chip) : `<span class="mute">not sent yet</span>`}</div>`;
+    }).join("");
+  }
+  if (d.rounds.length) out += `<h3>Closed rounds</h3>` + roundDetailsHtml(d, chip);
+  return out;
 }
 
 /* ---------- Scoreboard tab: read-only live view of one game (admin) ---------- */
