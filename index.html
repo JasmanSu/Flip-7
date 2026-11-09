@@ -94,6 +94,17 @@
   .result{font:900 1.6rem/1.2 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.03em;text-align:center;padding:16px 12px;margin-top:14px;border-radius:5px;background:var(--ink);color:var(--yellow)}
   .result small{display:block;font:600 .8rem system-ui;letter-spacing:0;color:var(--cream);margin-top:2px}
 
+  /* ---------- modal, QR, scanner ---------- */
+  .modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.75)}
+  .modal[hidden]{display:none}
+  .modal-box{position:relative;width:100%;max-width:380px;max-height:100%;overflow:auto;padding:18px;border:3px solid var(--ink);border-radius:8px;background:var(--cream);color:var(--ink);box-shadow:4px 5px 0 #000}
+  .modal-box h2{margin:0 0 10px;font:900 1.4rem/1.1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.03em;text-transform:uppercase}
+  .qr{display:block;width:100%;max-width:300px;margin:10px auto;padding:6px;background:#fff;border:3px solid var(--ink);border-radius:4px;line-height:0}
+  .qr svg{width:100%;height:auto}
+  .scanview{position:relative;margin:10px 0;border:3px solid var(--ink);border-radius:4px;background:#000;overflow:hidden;aspect-ratio:1/1}
+  .scanview video{width:100%;height:100%;object-fit:cover}
+  .scanview::after{content:"";position:absolute;inset:18%;border:3px dashed var(--yellow);border-radius:8px;pointer-events:none}
+
   /* ---------- game bits ---------- */
   .codes{display:flex;gap:6px;margin:6px 0 2px}
   .codes .pc{width:46px;height:62px;font-size:1.6rem;color:var(--c)}
@@ -299,6 +310,10 @@
 
 </main>
 
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true"><div class="modal-box" id="modal-box"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script src="config.js"></script>
@@ -381,6 +396,117 @@ if (configured) {
 }
 renderBoard();
 
+/* ---------- QR invite: link, modal, scanner ---------- */
+const JOIN_RE = /^[A-Z2-9]{5}$/;
+function inviteUrl(code) { return location.origin + location.pathname + "?join=" + encodeURIComponent(code); }
+// Accepts a full invite URL or a bare 5 character code. Returns the code or null.
+function parseJoin(text) {
+  let t = String(text || "").trim();
+  try { const c = new URL(t).searchParams.get("join"); if (c) t = c; } catch { /* not a URL */ }
+  t = t.toUpperCase();
+  return JOIN_RE.test(t) ? t : null;
+}
+function applyJoinCode(code) {
+  if (!code) return false;
+  if (S.session && S.session.code !== code) {
+    if (!confirm(`Leave your current game and join ${code}?`)) return false;
+    leave(true); renderBoard();
+  }
+  if (S.session) return true; // already in this game
+  showTab("board");
+  const input = $("#j-code"); if (!input) return false;
+  input.value = code;
+  $("#j-name").focus();
+  return true;
+}
+function handleJoinLink() {
+  const raw = new URLSearchParams(location.search).get("join");
+  if (raw === null) return;
+  history.replaceState(null, "", location.pathname + location.hash);
+  if (!configured) return;
+  const code = parseJoin(raw);
+  if (!code) { flash("err", "That invite link has an invalid join code."); return; }
+  applyJoinCode(code);
+}
+
+let modalClose = null;
+function openModal(html, onClose) {
+  closeModal();
+  $("#modal-box").innerHTML = html; modalClose = onClose || null;
+  $("#modal").hidden = false;
+  $("#modal").onclick = e => { if (e.target.id === "modal") closeModal(); };
+  const b = $("#modal-box [data-close]"); if (b) b.onclick = closeModal;
+  return $("#modal-box");
+}
+function closeModal() {
+  if (modalClose) { const f = modalClose; modalClose = null; f(); }
+  $("#modal").hidden = true; $("#modal-box").innerHTML = "";
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#modal").hidden) closeModal(); });
+
+function showQr(code, gameName) {
+  const url = inviteUrl(code);
+  const qr = qrcode(0, "M"); qr.addData(url); qr.make();
+  const box = openModal(`
+    <h2>Invite players</h2>
+    <div class="mute" style="font-size:.85rem">${esc(gameName)} – code <b>${esc(code)}</b></div>
+    <div class="qr" role="img" aria-label="QR code to join game ${esc(code)}">${qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true })}</div>
+    <div class="mute" style="font-size:.8rem;word-break:break-all">${esc(url)}</div>
+    <button type="button" class="btn" id="b-copy">Copy link</button>
+    <button type="button" class="btn ghost" data-close>Close</button>`);
+  $("#b-copy", box).onclick = async () => {
+    try { await navigator.clipboard.writeText(url); $("#b-copy").textContent = "Copied!"; }
+    catch { prompt("Copy this link:", url); }
+  };
+}
+
+function openScanner() {
+  let stream = null, raf = 0, stopped = false;
+  const stop = () => { stopped = true; cancelAnimationFrame(raf); if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; };
+  const box = openModal(`
+    <h2>Scan QR code</h2>
+    <div class="scanview"><video id="scan-video" playsinline muted></video></div>
+    <div class="msg warn" id="scan-msg">Starting camera…</div>
+    <button type="button" class="btn ghost" data-close>Cancel</button>`, stop);
+  const msg = t => { const m = $("#scan-msg", box); if (m) m.textContent = t; };
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { msg("Camera not available here (needs HTTPS). Type the code instead."); return; }
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }).then(async st => {
+    if (stopped) { st.getTracks().forEach(t => t.stop()); return; }
+    stream = st;
+    const video = $("#scan-video", box); video.srcObject = st; await video.play();
+    msg("Point the camera at the QR code.");
+    const detector = "BarcodeDetector" in window ? new BarcodeDetector({ formats: ["qr_code"] }) : null;
+    const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
+    let last = 0;
+    const tick = async t => {
+      if (stopped) return;
+      if (t - last > 150 && video.readyState >= 2 && video.videoWidth) {
+        last = t;
+        let text = null;
+        try {
+          if (detector) { const r = await detector.detect(video); if (r[0]) text = r[0].rawValue; }
+          else {
+            const w = canvas.width = video.videoWidth, h = canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, w, h);
+            const r = jsQR(ctx.getImageData(0, 0, w, h).data, w, h); if (r) text = r.data;
+          }
+        } catch { /* ignore a failed frame */ }
+        if (text !== null) {
+          const code = parseJoin(text);
+          if (code) { closeModal(); applyJoinCode(code); return; }
+          msg("That QR code is not a Flip 7 invite. Keep scanning.");
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }).catch(err => {
+    msg(err && err.name === "NotAllowedError" ? "Camera permission denied. Allow it in browser settings, or type the code." : "Could not open the camera. Type the code instead.");
+  });
+}
+
+handleJoinLink(); // after the consts above are initialised
+
 function attach(code) {
   detach();
   gameRef = db.ref("games/" + code);
@@ -426,6 +552,12 @@ function msgHtml() { const m = S.msg; S.msg = null; return m ? `<div class="msg 
 function renderLobby(el) {
   el.innerHTML = `
   ${msgHtml()}
+  <div class="card" data-i="J" style="--c:var(--orange)"><h2>Join a game</h2>
+    <label for="j-name">Your name</label><input type="text" id="j-name" maxlength="20" autocomplete="nickname">
+    <label for="j-code">Join code</label><input type="text" id="j-code" maxlength="5" autocapitalize="characters" autocomplete="off" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:.2em">
+    <button class="btn ghost" type="button" id="b-scan">Scan QR code</button>
+    <button class="btn" id="b-join">Join</button>
+  </div>
   <div class="card" data-i="A" style="--c:var(--green)"><h2>Create a game</h2>
     <label for="c-name">Your name</label><input type="text" id="c-name" maxlength="20" autocomplete="nickname">
     <label for="c-game">Game name</label><input type="text" id="c-game" maxlength="30" placeholder="Friday night">
@@ -436,13 +568,10 @@ function renderLobby(el) {
     <label for="c-max">Max players</label><input type="number" id="c-max" inputmode="numeric" value="8" min="2" max="20">
     <button class="btn" id="b-create">Create game (I also play)</button>
   </div>
-  <div class="card" data-i="J" style="--c:var(--orange)"><h2>Join a game</h2>
-    <label for="j-name">Your name</label><input type="text" id="j-name" maxlength="20" autocomplete="nickname">
-    <label for="j-code">Join code</label><input type="text" id="j-code" maxlength="5" autocapitalize="characters" autocomplete="off" placeholder="ABCDE" style="text-transform:uppercase;letter-spacing:.2em">
-    <button class="btn" id="b-join">Join</button>
-  </div>`;
+`;
   $("#b-create").onclick = createGame;
   $("#b-join").onclick = joinGame;
+  $("#b-scan").onclick = openScanner;
 }
 
 async function createGame() {
@@ -512,6 +641,7 @@ function renderGame(el) {
       <div class="card" data-i="${meta.round}" style="--c:var(--blue)">
         <div class="mute" style="font-size:.8rem">${esc(meta.name)} – join code</div>
         <div class="codes">${[...S.session.code].map(c => `<span class="pc" data-n="${esc(c)}">${esc(c)}</span>`).join("")}</div>
+        <button type="button" class="btn ghost" id="b-qr">Show QR to invite</button>
         <div class="meta"><span class="pill">${chip ? "Chip mode" : "Normal mode"}</span><span class="pill">Target ${meta.target}</span><span class="pill">Game ${meta.gameNo || 1}</span><span class="pill">Round ${meta.round}</span><span class="pill" id="g-count"></span><span class="pill">You: ${esc(me.name)}</span></div>
       </div>
       <div id="g-calc"></div>
@@ -522,6 +652,7 @@ function renderGame(el) {
       <div class="card" id="g-pastcard" data-i="P" style="--c:var(--pink)"><h2>Past games</h2><div id="g-past"></div></div>
       <button class="btn ghost" id="b-leave">Leave game on this device</button>`;
     $("#g-stand").onclick = e => { const b = e.target.closest("[data-rm]"); if (b) removePlayer(b.dataset.rm, b.dataset.name); };
+    $("#b-qr").onclick = () => showQr(S.session.code, meta.name);
     $("#b-leave").onclick = () => { if (confirm("Leave this game on this device? You can rejoin only by joining again as a new player.")) leave(); };
     if (!finished) buildCalc(me);
   }
