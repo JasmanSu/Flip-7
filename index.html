@@ -642,7 +642,8 @@ function renderGame(el) {
         <div class="mute" style="font-size:.8rem">${esc(meta.name)} – join code</div>
         <div class="codes">${[...S.session.code].map(c => `<span class="pc" data-n="${esc(c)}">${esc(c)}</span>`).join("")}</div>
         <button type="button" class="btn ghost" id="b-qr">Show QR to invite</button>
-        <div class="meta"><span class="pill">${chip ? "Chip mode" : "Normal mode"}</span><span class="pill">Target ${meta.target}</span><span class="pill">Game ${meta.gameNo || 1}</span><span class="pill">Round ${meta.round}</span><span class="pill" id="g-count"></span><span class="pill">You: ${esc(me.name)}</span></div>
+        <div class="meta"><span class="pill">${chip ? "Chip mode" : "Normal mode"}</span><span class="pill">Target ${meta.target}</span><span class="pill">Game ${meta.gameNo || 1}</span><span class="pill">Round ${meta.round}</span><span class="pill">You: ${esc(me.name)}</span></div>
+        <div id="g-players" style="margin-top:10px"></div>
       </div>
       <div id="g-calc"></div>
       <div id="g-admin"></div>
@@ -669,7 +670,8 @@ function patchGame(d, me, isAdmin, finished, winner, chip) {
   $("#g-banner").innerHTML = b;
 
   // standings + round history
-  $("#g-count").textContent = `Players ${d.rows.length}${meta.maxPlayers ? "/" + meta.maxPlayers : ""}`;
+  $("#g-players").innerHTML = `<div class="mute" style="font-size:.8rem">Joined ${d.rows.length}${meta.maxPlayers ? " of " + meta.maxPlayers : ""} players</div>` +
+    `<div class="meta">${d.rows.map(r => `<span class="pill" style="${r.id === me.id ? "background:var(--blue)" : ""}">${esc(r.name)}${r.id === meta.adminId ? " ★" : ""}</span>`).join("")}</div>`;
   $("#g-stand").innerHTML = standingsHtml(d, meta, me.id, finished, chip, isAdmin);
   $("#g-histcard").hidden = !d.rounds.length;
   $("#g-hist").innerHTML = historyHtml(d, chip);
