@@ -10,7 +10,7 @@ No build step, no frameworks. Plain HTML, CSS and JavaScript, plus the Firebase 
 - **Chip twist** tab: the chip house rules with a worked example.
 - **Game** tab: create or join a game and send your score.
   - Admin creates a game (name, Normal or Chip mode, target score) and gets a 5-character join code (no ambiguous characters, checked to be unused). The admin plays too.
-  - Players join with a name and the code. Late joiners get `5 + 2 x rounds already played` chips in Chip mode.
+  - Players join with a name and the code, by scanning the **QR invite** (the *Show QR to invite* button on the game card, or the in-app *Scan QR code* button), or by opening the invite link `?join=CODE`. QR codes use `qrcode-generator` and `jsQR` from a CDN. The camera needs HTTPS. Late joiners get `5 + 2 x rounds already played` chips in Chip mode.
   - Each player taps the cards they hold and the score is calculated live, for example `Score 33 x 3 = 99 points`. Scores can be resent until the round closes.
   - Admin closes the round (`Close round (n/total sent)`), or ends the game early with **End this game** if nobody has reached the target.
   - When a game finishes, the admin can start a **new game with the same code and players**. The finished game is saved under *Past games*, with a win tally.
