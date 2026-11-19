@@ -10,8 +10,8 @@ No build step, no frameworks. Plain HTML, CSS and JavaScript, plus the Firebase 
 - **Chip twist** tab: the chip house rules with a worked example.
 - **Game** tab: create or join a game and send your score.
   - Admin creates a game (name, Normal or Chip mode, target score) and gets a 5-character join code (no ambiguous characters, checked to be unused). The admin plays too.
-  - Players join with a name and the code, by scanning the **QR invite** (the *Show QR to invite* button on the game card, or the in-app *Scan QR code* button), or by opening the invite link `?join=CODE`. QR codes use `qrcode-generator` and `jsQR` from a CDN. The camera needs HTTPS. Late joiners get `5 + 2 x rounds already played` chips in Chip mode.
-  - Each player taps the cards they hold and the score is calculated live, for example `Score 33 x 3 = 99 points`. Scores can be resent until the round closes.
+  - Players join with a name and the code, by scanning the **QR invite** (the *Show QR to invite* button on the game card, or the in-app *Scan QR code* button), or by opening the invite link `?join=CODE`. QR codes use `qrcode-generator` and `jsQR` from a CDN. The camera needs HTTPS. Late joiners get `3 + 1 x rounds already played` chips (maximum 8) in Chip mode.
+  - Each player taps the cards they hold and the score is calculated live, for example `Score 33 x 6 = 198 points` (bet 3 chips). Scores can be resent until the round closes.
   - Admin closes the round (`Close round (n/total sent)`), or ends the game early with **End this game** if nobody has reached the target.
   - When a game finishes, the admin can start a **new game with the same code and players**. The finished game is saved under *Past games*, with a win tally.
 - **Scoreboard** tab: a read-only live view of one game (opened from the Admin tab).
@@ -36,11 +36,15 @@ The game ends when at least one player has reached the target at the end of a ro
 
 ### Chip twist (Chip mode only)
 
-- One chip type, each worth 1. Everyone starts round 1 with 5 chips and receives 2 more when each round ends. Chips carry over.
-- Before flipping, each player bets any number of chips they hold. Betting 0 counts as x1.
-- After normal scoring (including the +15 bonus) the round score is multiplied by the chips bet.
-  Example: `(45 - 4 - 8) x 3 = 99`.
+- One chip type. Everyone starts round 1 with 3 chips and receives 1 more when each round ends. Chips carry over.
+- A player holds at most 8 chips. Extra chips beyond 8 are burned and cannot be bet.
+- Bets are made before the cards are dealt. Each player bets any number of chips they hold; there is no shared pot.
+- Every round a player must state their bet, 0 included. The bet locks once the score is sent.
+- Each chip bet is worth x2: bet 0 = x1, 1 chip = x2, 2 = x4, 3 = x6, up to 8 = x16.
+- After normal scoring (including the +15 bonus) the round score is multiplied by the bet's multiplier.
+  Example: `(45 - 4 - 8) = 33`, bet 3 chips = x6, `33 x 6 = 198`.
 - A bust scores 0 and loses the chips bet. Otherwise the chips are kept.
+- Late joiners get `3 + 1 x rounds already played` chips (maximum 8).
 
 ## Security notes
 
@@ -60,4 +64,4 @@ games/{code}/
   history/g{n}       finished games: winner, standings and per-round results
 ```
 
-Chips are derived, not stored: `5 + 2 x (round - 1) - chips lost on busts in closed rounds`.
+Chips are derived, not stored: start at `min(8, 3 + joinRound - 1)`, then for each closed round subtract chips lost on a bust and add 1, capped at 8.

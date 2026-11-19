@@ -269,12 +269,15 @@
     <h2>Chip twist</h2>
     <p>House rule. Chips are score multipliers, used only in <b>Chip mode</b>. Normal mode is the same game without chips.</p>
     <ul>
-      <li>One chip type, each worth <b>1</b>.</li>
-      <li>Everyone starts round 1 with <b>5 chips</b> and receives <b>2 more when each round ends</b>. Chips carry over.</li>
-      <li>Before flipping, bet <b>any number of chips</b> you hold. Betting 0 counts as <b>x1</b>.</li>
-      <li>After normal scoring (including the +15 bonus), the round score is <b>multiplied by the chips bet</b>.</li>
+      <li>One chip type.</li>
+      <li>Everyone starts round 1 with <b>3 chips</b> and receives <b>1 more when each round ends</b>. Chips carry over.</li>
+      <li>You hold at most <b>8 chips</b>. Extra chips beyond 8 are <b>burned</b> and cannot be bet.</li>
+      <li>Bets must be made <b>before the dealer deals the cards</b>. Each player chooses their own bet of any number of chips they hold. There is no shared pot, and nobody has to match anyone else's bet.</li>
+      <li>Every round, even if you bust, you must <b>state how many chips you bet</b> (0 is a valid bet). Once you send your score, the bet is locked for that round.</li>
+      <li>Each chip bet is worth <b>x2</b>: bet 0 = <b>x1</b>, 1 chip = <b>x2</b>, 2 chips = <b>x4</b>, 3 chips = <b>x6</b>, up to 8 chips = <b>x16</b>.</li>
+      <li>After normal scoring (including the +15 bonus), the round score is <b>multiplied by the bet's multiplier</b>.</li>
       <li>If you <b>bust</b>: you score 0 and <b>lose the chips you bet</b>. Otherwise you keep them.</li>
-      <li>Late joiners get <b>5 + 2 x rounds already played</b> chips, the same as a player who never lost chips.</li>
+      <li>Late joiners get <b>3 + 1 x rounds already played</b> chips (maximum 8).</li>
     </ul>
   </div>
   <div class="card" data-i="99" style="--c:var(--pink)">
@@ -283,11 +286,12 @@
       <span class="pc" style="--c:var(--blue)" data-n="45">45</span>
       <span class="pc" style="--c:var(--red)" data-n="-4">-4</span>
       <span class="pc" style="--c:var(--red)" data-n="-8">-8</span>
-      <span class="pc" style="--c:var(--purple)" data-n="●">x3</span>
+      <span class="pc" style="--c:var(--purple)" data-n="●">x6</span>
     </div>
     <div class="ex">
       (45 - 4 - 8) = 33<br>
-      33 x 3 = <b>99 points</b>
+      3 chips bet = x6<br>
+      33 x 6 = <b>198 points</b>
     </div>
     <p class="mute">Number cards 45, power cards -4 and -8, bet 3 chips. Had this player busted, they would score 0 and lose the 3 chips.</p>
   </div>
@@ -334,7 +338,7 @@ const CFG = window.FIREBASE_CFG || {
 /* ================================================================= */
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no I, O, 0, 1
-const START_CHIPS = 5, CHIPS_PER_ROUND = 2, FLIP7_BONUS = 15;
+const START_CHIPS = 3, CHIPS_PER_ROUND = 1, MAX_CHIPS = 8, FLIP7_BONUS = 15;
 const SESSION_KEY = "flip7v.session";
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -364,9 +368,11 @@ function calcScore({ nums, minus, half, flip7, bust, zero, bet, chip }) {
     base = Math.max(0, base - minus);
     if (flip7) base += FLIP7_BONUS;
   }
-  const mult = chip ? Math.max(bet, 1) : 1;
+  const mult = chip ? chipMultiplier(bet) : 1;
   return { base, mult, points: bust || zero ? 0 : base * mult, lost: bust && chip ? bet : 0 };
 }
+// 0 chips = x1, otherwise each chip doubles: 1 = x2, 2 = x4, ... 8 = x16
+function chipMultiplier(bet) { return bet > 0 ? bet * 2 : 1; }
 
 /* ---------- state ---------- */
 let db = null, gameRef = null;
@@ -379,12 +385,23 @@ function saveSession(s) { s ? localStorage.setItem(SESSION_KEY, JSON.stringify(s
 function derive(g) {
   const meta = g.meta, results = g.results || {}, subs = (g.submissions || {})["r" + meta.round] || {};
   const rows = Object.entries(g.players || {}).map(([id, p]) => {
-    let total = 0, lost = 0; const hist = {};
-    for (const k in results) { const x = results[k] && results[k][id]; if (x) { total += x.points; lost += x.lost || 0; hist[k] = x; } }
-    // chips: 5 at the start, +2 received when each round ends, minus chips lost on busts
-    return { id, name: p.name, total, chips: START_CHIPS + CHIPS_PER_ROUND * (meta.round - 1) - lost, hist, sub: subs[id] };
+    let total = 0; const hist = {};
+    for (const k in results) { const x = results[k] && results[k][id]; if (x) { total += x.points; hist[k] = x; } }
+    return { id, name: p.name, total, chips: chipsFor(p, meta.round, hist), hist, sub: subs[id] };
   }).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
   return { rows, sent: rows.filter(r => r.sub).length, rounds: Object.keys(results).sort((a, b) => a.slice(1) - b.slice(1)) };
+}
+
+// Chips a player holds at the start of `round`. Late joiners start at START_CHIPS + rounds already played.
+// Each closed round: lose chips bet on a bust, receive CHIPS_PER_ROUND, extras above MAX_CHIPS are burned.
+function chipsFor(p, round, hist) {
+  const join = p.joinRound || 1;
+  let c = Math.min(MAX_CHIPS, START_CHIPS + join - 1);
+  for (let r = join; r < round; r++) {
+    const x = hist["r" + r];
+    c = Math.min(MAX_CHIPS, c - (x && x.lost ? x.lost : 0) + CHIPS_PER_ROUND);
+  }
+  return c;
 }
 
 /* ---------- boot ---------- */
@@ -743,13 +760,14 @@ const luckyCard = k => faceCard({ k, label: "13", word: "LUCKY", kind: "candy", 
 })();
 
 /* ---------- calculator (tap your cards, total is computed) ---------- */
-let K = { nums: [], minus: [], half: false, zero: false, lucky: false, bust: false, bet: 0 };
+let K = { nums: [], minus: [], half: false, zero: false, lucky: false, bust: false, bet: 0, betSet: false };
 const cardCount = () => K.nums.length + (K.zero ? 1 : 0) + (K.lucky ? 1 : 0);
 
 function buildCalc(me) {
   const chip = S.game.meta.mode === "chip", s = me.sub || {}, saved = s.numCards || [];
   K = { nums: [...new Set(saved.filter(n => n >= 1))].slice(0, MAX_NUMBER_CARDS), minus: [...new Set(s.minusCards || [])], half: !!s.half,
-    zero: !!s.cardZero || saved.includes(0), lucky: !!s.cardLucky, bust: s.manualBust !== undefined ? !!s.manualBust : !!s.bust, bet: s.bet || 0 };
+    zero: !!s.cardZero || saved.includes(0), lucky: !!s.cardLucky, bust: s.manualBust !== undefined ? !!s.manualBust : !!s.bust, bet: s.bet || 0,
+    betSet: s.bet !== undefined }; // a bet already sent this round is locked
   const box = $("#g-calc");
   box.innerHTML = `<div class="card" data-i="${S.game.meta.round}" style="--c:var(--purple)"><h2>My round ${S.game.meta.round} cards</h2>
     <h3>Number cards <span class="mute" id="k-numcount"></span></h3>
@@ -760,9 +778,11 @@ function buildCalc(me) {
     <div class="picker">${zeroCard("zero")}${luckyCard("lucky")}</div>
     <p class="mute" style="font-size:.8rem;margin:4px 0 0">Lucky 13 is the only card that can be held together with the 13.</p>
     ${chip ? `<div class="chipbox"><h3>Chips to bet <span id="k-have" class="mute"></span></h3>
-      <div class="stepper"><button type="button" data-k="bm">−</button><input type="number" id="k-bet" inputmode="numeric" min="0" value="${K.bet}" aria-label="Chips to bet"><button type="button" data-k="bp">+</button></div>
+      <div class="stepper"><button type="button" data-k="bm">−</button><input type="number" id="k-bet" inputmode="numeric" min="0" max="8" value="${K.bet}" aria-label="Chips to bet"><button type="button" data-k="bp">+</button></div>
       <div class="chiprow" id="k-chips"></div>
-      <p class="mute" style="font-size:.8rem;margin:6px 0 0">Your round score is multiplied by the chips you bet (0 counts as x1). <b id="k-mult"></b> If you bust, you lose the chips you bet.</p></div>`
+      <button type="button" class="tg" data-k="nobet" style="--c:var(--purple);width:100%;margin-top:6px">No bet (0 chips)</button>
+      <p class="mute" style="font-size:.8rem;margin:6px 0 0"><b id="k-mult"></b></p>
+      <p id="k-betnote" style="font-size:.9rem;margin:6px 0 0;font-weight:900;color:var(--bad)"></p></div>`
       : `<p class="mute" style="font-size:.8rem;margin:0 0 4px">Normal mode: no chips. Create a Chip mode game to bet chips.</p>`}
     <h3>Your hand</h3>
     <div class="hand" id="k-hand"></div>
@@ -782,8 +802,12 @@ function buildCalc(me) {
     else if (k === "zero") K.zero = !K.zero;
     else if (k === "lucky") K.lucky = !K.lucky;
     else if (k === "bust") K.bust = !K.bust;
-    else if (k === "bm") K.bet = Math.max(0, K.bet - 1);
-    else if (k === "bp") K.bet = Math.min(me2.chips, K.bet + 1);
+    else if (k === "bm" || k === "bp" || k === "nobet") {
+      if (me2 && me2.sub) return; // bet locked after sending
+      K.betSet = true;
+      if (k === "nobet") K.bet = 0;
+      else K.bet = k === "bm" ? Math.max(0, K.bet - 1) : Math.min(me2.chips, K.bet + 1);
+    }
     updateCalc(me2);
   };
   // a double click/tap never counts a card twice: it simply switches that card off
@@ -799,8 +823,11 @@ function buildCalc(me) {
   box.oninput = e => {
     if (e.target.id !== "k-bet") return;
     const n = parseInt(e.target.value, 10);
+    const me2 = currentMe();
+    if (me2 && me2.sub) { e.target.value = K.bet; return; } // bet locked after sending
+    K.betSet = true;
     K.bet = isNaN(n) ? 0 : Math.max(0, n);
-    updateCalc(currentMe());
+    updateCalc(me2);
   };
   $("#k-send").onclick = sendScore;
 }
@@ -824,7 +851,7 @@ function updateCalc(me) {
   if (chip && K.bet > me.chips) K.bet = me.chips; // cannot bet more than you hold (chips can also shrink when a round closes)
   const { v, err } = readCalc(me), r = calcScore(v), count = cardCount();
 
-  const isOn = (k, val) => k === "n" ? K.nums.includes(val) : k === "m" ? K.minus.includes(val) : ["half", "zero", "lucky", "bust"].includes(k) ? !!K[k] : false;
+  const isOn = (k, val) => k === "n" ? K.nums.includes(val) : k === "m" ? K.minus.includes(val) : k === "nobet" ? K.betSet && K.bet === 0 : ["half", "zero", "lucky", "bust"].includes(k) ? !!K[k] : false;
   document.querySelectorAll("#g-calc [data-k]").forEach(b => { if (b.dataset.k !== "mr") b.classList.toggle("on", isOn(b.dataset.k, Number(b.dataset.v))); });
   document.querySelectorAll("#g-calc [data-k=n]").forEach(b => { b.disabled = !K.nums.includes(Number(b.dataset.v)) && K.nums.length >= MAX_NUMBER_CARDS; });
   $("#k-numcount").textContent = `(${K.nums.length}/${MAX_NUMBER_CARDS} different, tap again to remove)`;
@@ -832,7 +859,18 @@ function updateCalc(me) {
   const bi = $("#k-bet");
   if (bi && (document.activeElement !== bi || betBefore !== K.bet)) bi.value = K.bet; // do not fight the user while typing
   if ($("#k-chips")) $("#k-chips").innerHTML = chipsHtml(K.bet);
-  if ($("#k-mult")) $("#k-mult").textContent = `Multiplier: x${Math.max(K.bet, 1)}.`;
+  if ($("#k-mult")) $("#k-mult").textContent = `Multiplier: x${chipMultiplier(K.bet)}.`;
+  const betLocked = chip && !!me.sub;
+  ["#k-bet"].forEach(s => { const el = $(s); if (el) el.disabled = betLocked; });
+  document.querySelectorAll("#g-calc [data-k=bm], #g-calc [data-k=bp], #g-calc [data-k=nobet]").forEach(b => b.disabled = betLocked);
+  if ($("#k-betnote")) {
+    const note = $("#k-betnote"), warn = chip && !betLocked && !K.betSet;
+    const warnNow = warn && !!K.betNag;
+    note.textContent = !chip ? "" : betLocked ? "Bet locked for this round." : warnNow ? "⚠ BET NOT STATED! Pick chips or press No bet. You CANNOT send." : "";
+    note.style.color = warnNow ? "var(--bad)" : "var(--ink)";
+    note.style.fontWeight = warnNow ? "900" : "600";
+    note.style.textTransform = warnNow ? "uppercase" : "none";
+  }
 
   const nums = [...K.nums].sort((a, b) => a - b);
   $("#k-hand").innerHTML = count || K.minus.length
@@ -857,6 +895,7 @@ function updateCalc(me) {
 async function sendScore() {
   const g = S.game, me = currentMe(), { v, err } = readCalc(me);
   if (err || g.meta.status !== "playing") return;
+  if (g.meta.mode === "chip" && !K.betSet) { K.betNag = true; updateCalc(me); return; } // bet must be stated (chips or No bet) before sending; show the warning now
   const round = g.meta.round, r = calcScore(v);
   $("#k-send").disabled = true;
   try {
