@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0a1f">
+<title>Coup: Sealed Allegiance – House rules</title>
+<style>
+  :root{--ink:#14122b;--cream:#fff8e8;--paper:#f3ead2;--mute:#6b6684;
+    --red:#e63946;--blue:#2a6fdb;--green:#23975a;--orange:#f4802a;--purple:#7b3fe4;--yellow:#f2c230;--pink:#e0529c;--teal:#1a9fa0;
+    --page-text:#fff8e8;--accent:#f2c230;--nav-bg:rgba(12,10,31,.92);--nav-line:#2b2650;
+    --seg-bg:#1b1740;--seg-text:#fff8e8;--seg-line:#4a4380;color-scheme:dark;
+    --page-bg:radial-gradient(circle at 20% 10%,rgba(123,63,228,.25),transparent 45%),radial-gradient(circle at 85% 30%,rgba(230,57,70,.18),transparent 40%),repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 12px,transparent 12px 24px),#0c0a1f;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  [data-theme="light"]{--page-text:#14122b;--accent:#d9930a;--nav-bg:rgba(236,228,207,.92);--nav-line:#cdbf98;
+    --seg-bg:#fff8e8;--seg-text:#14122b;--seg-line:#14122b;color-scheme:light;
+    --page-bg:radial-gradient(circle at 20% 10%,rgba(123,63,228,.12),transparent 45%),radial-gradient(circle at 85% 30%,rgba(230,57,70,.10),transparent 40%),repeating-linear-gradient(45deg,rgba(20,18,43,.035) 0 12px,transparent 12px 24px),#ece4cf}
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;color:var(--page-text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;overflow-x:hidden}
+  body{min-height:100vh;background:var(--page-bg)}
+  [hidden]{display:none!important}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  a{color:inherit}
+
+  /* theme switch */
+  .theme{display:flex;margin:0 auto 12px;max-width:360px;border:2px solid var(--seg-line);border-radius:6px;overflow:hidden;background:var(--seg-bg)}
+  .theme button{flex:1;min-height:44px;padding:8px 6px;border:0;background:transparent;color:var(--seg-text);font:800 .72rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  .theme button+button{border-left:2px solid var(--seg-line)}
+  .theme button.on{background:var(--yellow);color:var(--ink)}
+
+  /* game switch: three buttons */
+  .gswitch{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:640px;margin:0 auto 12px;padding:0 12px}
+  .gswitch a{display:flex;align-items:center;justify-content:center;min-height:48px;padding:8px 6px;border:3px solid var(--ink);border-radius:8px;background:var(--cream);color:var(--ink);text-decoration:none;box-shadow:3px 3px 0 #000;font:900 1rem/1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+  .gswitch a[aria-current="page"]{background:var(--yellow);transform:translateY(-2px);box-shadow:4px 5px 0 #000}
+
+  /* header */
+  header{padding:14px 16px 4px;text-align:center}
+  header h1{margin:6px 0 0;font:900 clamp(1.7rem,8vw,2.4rem)/1.05 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--cream);text-shadow:3px 3px 0 var(--red)}
+  header h1 span{display:block;font-size:.6em;text-shadow:2px 2px 0 var(--red)}
+  header .sub{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-top:6px}
+
+  /* tabs */
+  nav.tabs{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;background:var(--nav-bg);backdrop-filter:blur(6px);border-bottom:2px solid var(--nav-line)}
+  nav.tabs button{min-height:48px;padding:10px 6px;border:3px solid var(--ink);border-radius:5px;background:var(--cream);color:var(--ink);font:900 .95rem/1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:3px 3px 0 #000;transition:transform .12s}
+  nav.tabs button.on{background:var(--yellow);transform:translateY(-2px) rotate(-1deg);box-shadow:4px 5px 0 #000}
+
+  main{max-width:640px;margin:0 auto;padding:16px 12px 40px}
+
+  /* cards */
+  .card{position:relative;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:8px;padding:34px 16px 22px;margin-bottom:18px;
+    box-shadow:5px 6px 0 rgba(0,0,0,.6),inset 0 0 0 5px var(--cream),inset 0 0 0 7px var(--c,var(--ink));overflow-wrap:anywhere}
+  .card::before{content:attr(data-i);position:absolute;top:12px;left:14px;font:900 1.2rem/1 Impact,"Arial Black",system-ui,sans-serif;color:var(--c,var(--ink))}
+  .card h2{margin:0 0 10px;font:900 1.5rem/1.1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.03em;text-transform:uppercase;color:var(--c,var(--ink))}
+  .card h3{margin:16px 0 6px;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+  .card p{margin:8px 0}
+  .card ol,.card ul{padding-left:20px;margin:6px 0}
+  .card li{margin:6px 0}
+  .mute{color:var(--mute)}
+  .placeholder{text-align:center;padding:24px 14px;border:2px dashed var(--ink);border-radius:6px}
+  .placeholder h3{margin:0 0 6px;font:900 1.3rem Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink)}
+  .placeholder p{margin:0}
+
+  /* phones: keep everything inside the 360px width */
+  @media (max-width:360px){
+    .gswitch a{font-size:.85rem;padding:6px 4px}
+    nav.tabs button{font-size:.85rem}
+  }
+
+  /* Coup rules: action grid */
+  .coup-grid{border:2px solid var(--ink);border-radius:6px;overflow:hidden;margin:10px 0 0;color:var(--ink)}
+  .coup-row{position:relative;display:grid;grid-template-columns:1.1fr 1.1fr 2.2fr 1.3fr}
+  .coup-row+.coup-row{border-top:1px solid rgba(20,18,43,.2)}
+  .coup-row:nth-child(even):not(.coup-hdr){background:rgba(20,18,43,.04)}
+  .coup-row>div{padding:8px 10px;font-size:.88rem;line-height:1.4}
+  .coup-hdr{background:var(--ink);color:var(--cream);font:900 .75rem/1.2 Impact,"Arial Black",sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  .coup-row.new::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--orange)}
+  .coup-row.new>div:first-child{padding-left:14px}
+  .coup-role{display:inline-block;padding:2px 7px;border-radius:4px;background:var(--c);color:#fff;font:900 .8rem/1.4 Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:.03em}
+  .coup-note{background:var(--ink);color:var(--cream);border-radius:5px;padding:10px 14px;margin-top:10px;font-size:.9rem}
+  @media (max-width:639px){
+    .coup-hdr{display:none}
+    .coup-row{grid-template-columns:1fr 1fr;grid-template-areas:"char act" "eff eff" "ctr ctr"}
+    .cc-char{grid-area:char}
+    .cc-act{grid-area:act;font-weight:700}
+    .cc-eff{grid-area:eff}
+    .cc-ctr{grid-area:ctr}
+    .cc-ctr::before{content:"Counter: ";font-weight:700}
+    .coup-row>div{padding:6px 10px}
+    .coup-row>div:first-child{padding-top:10px}
+    .coup-row>div:last-child{padding-bottom:10px}
+  }
+
+</style>
+<script>
+/* theme: same saved key as the Flip 7 page, so the choice follows you between games */
+(function () {
+  var K = "flip7v.theme", mq = window.matchMedia("(prefers-color-scheme: dark)");
+  function pref() { try { return localStorage.getItem(K) || "system"; } catch (e) { return "system"; } }
+  function apply() {
+    var p = pref(), dark = p === "dark" || (p === "system" && mq.matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+      var on = b.dataset.themeSet === p; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on);
+    });
+  }
+  window.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+      b.addEventListener("click", function () { try { localStorage.setItem(K, b.dataset.themeSet); } catch (e) {} apply(); });
+    });
+    apply();
+  });
+  apply();
+})();
+</script>
+</head>
+<body>
+
+<nav class="gswitch" aria-label="Choose game">
+    <a href="index.html">Flip 7</a>
+    <a href="coup.html" aria-current="page">Coup</a>
+    <a href="catan.html">Catan</a>
+</nav>
+
+<div class="theme" role="group" aria-label="Colour theme">
+  <button type="button" data-theme-set="light">☀ Light</button>
+  <button type="button" data-theme-set="dark">☾ Dark</button>
+  <button type="button" data-theme-set="system">◐ System</button>
+</div>
+
+<header>
+  <h1>Coup<span>Sealed Allegiance</span></h1>
+  <div class="sub">House rules</div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <button type="button" data-tab="rules" class="on">Rules</button>
+  <button type="button" data-tab="game">Game</button>
+  <button type="button" data-tab="history">History</button>
+</nav>
+
+<main>
+
+<section id="tab-rules">
+  <div class="card coup-card" data-i="C" style="--c:var(--purple)">
+    <h2>Coup: new rules</h2>
+    <p>Coup with the Reformation expansion, with one twist: the Loyalist and Reformist cards are hidden, so nobody knows who is on their side.</p>
+
+    <h3>Setup</h3>
+    <ol class="steps">
+      <li>Play with the Reformation expansion: Inquisitor in the deck and a Treasury in the middle.</li>
+      <li>Faction cards are two-sided. Each player secretly turns theirs to the faction they choose, with no talking first.</li>
+      <li>Count the split without learning who is who: everyone drops a coin in a bag or cup, heads for Loyalist and tails for Reformist. Shake, pour and count.</li>
+      <li>No faction may have more than half the players, rounded up. If one does, everyone chooses again. After three tries, set up by random draw from the bag.</li>
+      <li>Hide your card under your two influence cards or in an opaque sleeve. To flip it, lift the cards, turn it over and put them back.</li>
+    </ol>
+
+    <h3>Action card</h3>
+    <p>Take one action. With 10 or more coins you must Coup. Rows with an orange edge are new or changed.</p>
+
+    <div class="coup-grid">
+      <div class="coup-row coup-hdr"><div>Character</div><div>Action</div><div>Effect</div><div>Counteraction</div></div>
+      <div class="coup-row new"><div class="cc-char">—</div><div class="cc-act">Income</div><div class="cc-eff">Take 1 coin</div><div class="cc-ctr">✗</div></div>
+      <div class="coup-row"><div class="cc-char">—</div><div class="cc-act">Foreign Aid</div><div class="cc-eff">Take 2 coins</div><div class="cc-ctr">✗</div></div>
+      <div class="coup-row new"><div class="cc-char">—</div><div class="cc-act">Coup</div><div class="cc-eff">Pay 7 coins, choose any player to lose influence. Allegiance never applies.</div><div class="cc-ctr">✗</div></div>
+      <div class="coup-row new"><div class="cc-char">—</div><div class="cc-act">Convert yourself</div><div class="cc-eff">Pay 1 coin to the Treasury and flip your faction card.</div><div class="cc-ctr">✗</div></div>
+      <div class="coup-row new"><div class="cc-char">—</div><div class="cc-act">Convert another</div><div class="cc-eff">Pay 2 coins to the Treasury. They flip their faction card and look at it.</div><div class="cc-ctr">✗</div></div>
+      <div class="coup-row"><div class="cc-char"><span class="coup-role" style="--c:#8e2457">Duke</span></div><div class="cc-act">Tax</div><div class="cc-eff">Take 3 coins</div><div class="cc-ctr">Blocks Foreign Aid</div></div>
+      <div class="coup-row"><div class="cc-char"><span class="coup-role" style="--c:#8e2457">Duke</span></div><div class="cc-act">Embezzle</div><div class="cc-eff">Take all coins from the Treasury</div><div class="cc-ctr">✗</div></div>
+      <div class="coup-row new"><div class="cc-char"><span class="coup-role" style="--c:#3c4650">Assassin</span></div><div class="cc-act">Assassinate</div><div class="cc-eff">Pay 3 coins, choose a player to lose influence. The target may call Allegiance.</div><div class="cc-ctr">✗</div></div>
+      <div class="coup-row"><div class="cc-char"><span class="coup-role" style="--c:#2f7d4f">Inquisitor</span></div><div class="cc-act">Swap</div><div class="cc-eff">Exchange a card with the Court deck</div><div class="cc-ctr">Blocks stealing</div></div>
+      <div class="coup-row"><div class="cc-char"><span class="coup-role" style="--c:#2f7d4f">Inquisitor</span></div><div class="cc-act">Examine</div><div class="cc-eff">Look at one influence card of a player, who may be forced to swap it</div><div class="cc-ctr">✗</div></div>
+      <div class="coup-row new"><div class="cc-char"><span class="coup-role" style="--c:#2f7d4f">Inquisitor</span></div><div class="cc-act">Check faction</div><div class="cc-eff">Pay 1 coin to the Treasury and look at one player’s faction card.</div><div class="cc-ctr">Contessa blocks</div></div>
+      <div class="coup-row new"><div class="cc-char"><span class="coup-role" style="--c:#2b78b8">Captain</span></div><div class="cc-act">Steal</div><div class="cc-eff">Take 2 coins from another player. The target may call Allegiance.</div><div class="cc-ctr">Blocks stealing</div></div>
+      <div class="coup-row new"><div class="cc-char"><span class="coup-role" style="--c:#b3322f">Contessa</span></div><div class="cc-act">✗</div><div class="cc-eff">✗</div><div class="cc-ctr">Blocks assassination and faction checks</div></div>
+    </div>
+
+    <h3>Convert</h3>
+    <p>Converting yourself costs 1 coin and converting another player costs 2, paid to the Treasury. The target flips their card and looks at it, and you don’t. Everyone sees that a conversion happened but not the result, so converting someone else is a blind gamble.</p>
+
+    <h3>Attacking and misfires</h3>
+    <p>Coup can target anyone and never misfires. Assassinate and Steal can target anyone too, but they can misfire.</p>
+    <ul>
+      <li><b>Allegiance call:</b> when targeted by Assassinate or Steal, before any challenge or block, you may call “Allegiance”. Both players show each other their faction cards, shielded from the table.</li>
+      <li><b>Same faction:</b> the attack misfires. It is cancelled and the attacker’s coins are lost to the Treasury.</li>
+      <li><b>Different factions:</b> false alarm. The caller pays 1 coin to the Treasury and the attack carries on.</li>
+      <li><b>No call:</b> the attack goes ahead, even against an ally.</li>
+    </ul>
+    <div class="coup-note"><b>Assassinate, in order:</b> declare and pay 3 coins. The target may call Allegiance. Anyone may challenge the Assassin. The target may block with the Contessa, which can be challenged. If nothing stops it, the target loses an influence.</div>
+
+    <h3>Inquisitor and Contessa</h3>
+    <ul>
+      <li><b>Inquisitor:</b> Swap and Examine are free. Checking a faction costs 1 coin to the Treasury.</li>
+      <li><b>Contessa:</b> blocks the faction check (the Captain does not) as well as assassination. A block can be challenged: if the Contessa is real, the challenger loses an influence and the check is cancelled. If it was a bluff, the bluffer loses an influence and the check goes through.</li>
+      <li>The Inquisitor’s coin is spent even when the check is blocked.</li>
+    </ul>
+
+    <h3>How to win</h3>
+    <ul>
+      <li><b>Unity call:</b> any player may call it between actions. Starting with the caller’s left, survivors reveal their faction cards one at a time. If all match the caller, the game ends and that faction wins. The reveal stops at the first mismatch and the caller loses one influence.</li>
+      <li><b>Last player standing</b> also wins, as in normal Coup.</li>
+      <li>A player who is eliminated flips their faction card for everyone to see.</li>
+    </ul>
+    <p class="mute" style="font-size:.72rem;letter-spacing:.14em;text-transform:uppercase">Optional: the Contessa can also block Convert another.</p>
+  </div>
+
+</section>
+
+<section id="tab-game" hidden>
+  <div class="card" data-i="G" style="--c:var(--blue)">
+    <h2>Game · Coup</h2>
+    <div class="placeholder"><h3>Coming soon</h3><p>The game screen will be built here.</p></div>
+  </div>
+</section>
+
+<section id="tab-history" hidden>
+  <div class="card" data-i="H" style="--c:var(--teal)">
+    <h2>History · Coup</h2>
+    <div class="placeholder"><h3>No games yet</h3><p>Finished games will be listed here.</p></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function () {
+  var tabs = document.querySelectorAll("nav.tabs button");
+  tabs.forEach(function (b) {
+    b.addEventListener("click", function () {
+      tabs.forEach(function (x) { x.classList.toggle("on", x === b); });
+      ["rules", "game", "history"].forEach(function (t) {
+        document.getElementById("tab-" + t).hidden = t !== b.dataset.tab;
+      });
+      window.scrollTo(0, 0);
+    });
+  });
+})();
+</script>
+</body>
+</html>

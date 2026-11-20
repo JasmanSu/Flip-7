@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0a1f">
+<title>Catan: Blackjack Twist – House rules</title>
+<style>
+  :root{--ink:#14122b;--cream:#fff8e8;--paper:#f3ead2;--mute:#6b6684;
+    --red:#e63946;--blue:#2a6fdb;--green:#23975a;--orange:#f4802a;--purple:#7b3fe4;--yellow:#f2c230;--pink:#e0529c;--teal:#1a9fa0;
+    --page-text:#fff8e8;--accent:#f2c230;--nav-bg:rgba(12,10,31,.92);--nav-line:#2b2650;
+    --seg-bg:#1b1740;--seg-text:#fff8e8;--seg-line:#4a4380;color-scheme:dark;
+    --page-bg:radial-gradient(circle at 20% 10%,rgba(123,63,228,.25),transparent 45%),radial-gradient(circle at 85% 30%,rgba(230,57,70,.18),transparent 40%),repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 12px,transparent 12px 24px),#0c0a1f;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  [data-theme="light"]{--page-text:#14122b;--accent:#d9930a;--nav-bg:rgba(236,228,207,.92);--nav-line:#cdbf98;
+    --seg-bg:#fff8e8;--seg-text:#14122b;--seg-line:#14122b;color-scheme:light;
+    --page-bg:radial-gradient(circle at 20% 10%,rgba(123,63,228,.12),transparent 45%),radial-gradient(circle at 85% 30%,rgba(230,57,70,.10),transparent 40%),repeating-linear-gradient(45deg,rgba(20,18,43,.035) 0 12px,transparent 12px 24px),#ece4cf}
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;color:var(--page-text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;overflow-x:hidden}
+  body{min-height:100vh;background:var(--page-bg)}
+  [hidden]{display:none!important}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  a{color:inherit}
+
+  /* theme switch */
+  .theme{display:flex;margin:0 auto 12px;max-width:360px;border:2px solid var(--seg-line);border-radius:6px;overflow:hidden;background:var(--seg-bg)}
+  .theme button{flex:1;min-height:44px;padding:8px 6px;border:0;background:transparent;color:var(--seg-text);font:800 .72rem system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  .theme button+button{border-left:2px solid var(--seg-line)}
+  .theme button.on{background:var(--yellow);color:var(--ink)}
+
+  /* game switch: three buttons */
+  .gswitch{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:640px;margin:0 auto 12px;padding:0 12px}
+  .gswitch a{display:flex;align-items:center;justify-content:center;min-height:48px;padding:8px 6px;border:3px solid var(--ink);border-radius:8px;background:var(--cream);color:var(--ink);text-decoration:none;box-shadow:3px 3px 0 #000;font:900 1rem/1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+  .gswitch a[aria-current="page"]{background:var(--yellow);transform:translateY(-2px);box-shadow:4px 5px 0 #000}
+
+  /* header */
+  header{padding:14px 16px 4px;text-align:center}
+  header h1{margin:6px 0 0;font:900 clamp(1.7rem,8vw,2.4rem)/1.05 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--cream);text-shadow:3px 3px 0 var(--red)}
+  header h1 span{display:block;font-size:.6em;text-shadow:2px 2px 0 var(--red)}
+  header .sub{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-top:6px}
+
+  /* tabs */
+  nav.tabs{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;background:var(--nav-bg);backdrop-filter:blur(6px);border-bottom:2px solid var(--nav-line)}
+  nav.tabs button{min-height:48px;padding:10px 6px;border:3px solid var(--ink);border-radius:5px;background:var(--cream);color:var(--ink);font:900 .95rem/1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:3px 3px 0 #000;transition:transform .12s}
+  nav.tabs button.on{background:var(--yellow);transform:translateY(-2px) rotate(-1deg);box-shadow:4px 5px 0 #000}
+
+  main{max-width:640px;margin:0 auto;padding:16px 12px 40px}
+
+  /* cards */
+  .card{position:relative;background:var(--cream);color:var(--ink);border:3px solid var(--ink);border-radius:8px;padding:34px 16px 22px;margin-bottom:18px;
+    box-shadow:5px 6px 0 rgba(0,0,0,.6),inset 0 0 0 5px var(--cream),inset 0 0 0 7px var(--c,var(--ink));overflow-wrap:anywhere}
+  .card::before{content:attr(data-i);position:absolute;top:12px;left:14px;font:900 1.2rem/1 Impact,"Arial Black",system-ui,sans-serif;color:var(--c,var(--ink))}
+  .card h2{margin:0 0 10px;font:900 1.5rem/1.1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.03em;text-transform:uppercase;color:var(--c,var(--ink))}
+  .card h3{margin:16px 0 6px;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+  .card p{margin:8px 0}
+  .card ol,.card ul{padding-left:20px;margin:6px 0}
+  .card li{margin:6px 0}
+  .mute{color:var(--mute)}
+  .placeholder{text-align:center;padding:24px 14px;border:2px dashed var(--ink);border-radius:6px}
+  .placeholder h3{margin:0 0 6px;font:900 1.3rem Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink)}
+  .placeholder p{margin:0}
+
+  /* phones: keep everything inside the 360px width */
+  @media (max-width:360px){
+    .gswitch a{font-size:.85rem;padding:6px 4px}
+    nav.tabs button{font-size:.85rem}
+  }
+
+
+</style>
+<script>
+/* theme: same saved key as the Flip 7 page, so the choice follows you between games */
+(function () {
+  var K = "flip7v.theme", mq = window.matchMedia("(prefers-color-scheme: dark)");
+  function pref() { try { return localStorage.getItem(K) || "system"; } catch (e) { return "system"; } }
+  function apply() {
+    var p = pref(), dark = p === "dark" || (p === "system" && mq.matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+      var on = b.dataset.themeSet === p; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on);
+    });
+  }
+  window.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+      b.addEventListener("click", function () { try { localStorage.setItem(K, b.dataset.themeSet); } catch (e) {} apply(); });
+    });
+    apply();
+  });
+  apply();
+})();
+</script>
+</head>
+<body>
+
+<nav class="gswitch" aria-label="Choose game">
+    <a href="index.html">Flip 7</a>
+    <a href="coup.html">Coup</a>
+    <a href="catan.html" aria-current="page">Catan</a>
+</nav>
+
+<div class="theme" role="group" aria-label="Colour theme">
+  <button type="button" data-theme-set="light">☀ Light</button>
+  <button type="button" data-theme-set="dark">☾ Dark</button>
+  <button type="button" data-theme-set="system">◐ System</button>
+</div>
+
+<header>
+  <h1>Catan<span>Blackjack Twist</span></h1>
+  <div class="sub">House rules</div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <button type="button" data-tab="rules" class="on">Rules</button>
+  <button type="button" data-tab="game">Game</button>
+  <button type="button" data-tab="history">History</button>
+</nav>
+
+<main>
+
+<section id="tab-rules">
+  <div class="card" data-i="?" style="--c:var(--orange)">
+    <h2>Catan: blackjack twist</h2>
+    <div class="placeholder"><h3>Rules not written yet</h3><p>Catan rules will be added later.</p></div>
+  </div>
+
+</section>
+
+<section id="tab-game" hidden>
+  <div class="card" data-i="G" style="--c:var(--blue)">
+    <h2>Game · Catan</h2>
+    <div class="placeholder"><h3>Coming soon</h3><p>The game screen will be built here.</p></div>
+  </div>
+</section>
+
+<section id="tab-history" hidden>
+  <div class="card" data-i="H" style="--c:var(--teal)">
+    <h2>History · Catan</h2>
+    <div class="placeholder"><h3>No games yet</h3><p>Finished games will be listed here.</p></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function () {
+  var tabs = document.querySelectorAll("nav.tabs button");
+  tabs.forEach(function (b) {
+    b.addEventListener("click", function () {
+      tabs.forEach(function (x) { x.classList.toggle("on", x === b); });
+      ["rules", "game", "history"].forEach(function (t) {
+        document.getElementById("tab-" + t).hidden = t !== b.dataset.tab;
+      });
+      window.scrollTo(0, 0);
+    });
+  });
+})();
+</script>
+</body>
+</html>
