@@ -6,13 +6,13 @@
 <meta name="theme-color" content="#0c0a1f">
 <title>Catan: Blackjack Twist – House rules</title>
 <style>
-  :root{--ink:#14122b;--cream:#fff8e8;--paper:#f3ead2;--mute:#6b6684;
+  :root{--title-color:#fff8e8;--title-shadow:3px 3px 0 #e63946;--ink:#14122b;--cream:#fff8e8;--paper:#f3ead2;--mute:#6b6684;
     --red:#e63946;--blue:#2a6fdb;--green:#23975a;--orange:#f4802a;--purple:#7b3fe4;--yellow:#f2c230;--pink:#e0529c;--teal:#1a9fa0;
     --page-text:#fff8e8;--accent:#f2c230;--nav-bg:rgba(12,10,31,.92);--nav-line:#2b2650;
     --seg-bg:#1b1740;--seg-text:#fff8e8;--seg-line:#4a4380;color-scheme:dark;
     --page-bg:radial-gradient(circle at 20% 10%,rgba(123,63,228,.25),transparent 45%),radial-gradient(circle at 85% 30%,rgba(230,57,70,.18),transparent 40%),repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 12px,transparent 12px 24px),#0c0a1f;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-  [data-theme="light"]{--page-text:#14122b;--accent:#d9930a;--nav-bg:rgba(236,228,207,.92);--nav-line:#cdbf98;
+  [data-theme="light"]{--title-color:#fff8e8;--title-shadow:-2px 0 #14122b,2px 0 #14122b,0 -2px #14122b,0 2px #14122b,-2px -2px #14122b,2px -2px #14122b,-2px 2px #14122b,2px 2px #14122b,3px 3px 0 #14122b,4px 4px 0 #14122b,6px 6px 0 #e63946;--page-text:#14122b;--accent:#d9930a;--nav-bg:rgba(236,228,207,.92);--nav-line:#cdbf98;
     --seg-bg:#fff8e8;--seg-text:#14122b;--seg-line:#14122b;color-scheme:light;
     --page-bg:radial-gradient(circle at 20% 10%,rgba(123,63,228,.12),transparent 45%),radial-gradient(circle at 85% 30%,rgba(230,57,70,.10),transparent 40%),repeating-linear-gradient(45deg,rgba(20,18,43,.035) 0 12px,transparent 12px 24px),#ece4cf}
   *,*::before,*::after{box-sizing:border-box}
@@ -35,8 +35,8 @@
 
   /* header */
   header{padding:14px 16px 4px;text-align:center}
-  header h1{margin:6px 0 0;font:900 clamp(1.7rem,8vw,2.4rem)/1.05 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--cream);text-shadow:3px 3px 0 var(--red)}
-  header h1 span{display:block;font-size:.6em;text-shadow:2px 2px 0 var(--red)}
+  header h1{margin:6px 0 0;font:900 clamp(2rem,9vw,2.8rem)/1 Impact,"Arial Black",system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--title-color);text-shadow:var(--title-shadow)}
+  header h1 span{display:block;margin-top:10px;font-size:.55em;line-height:1.15;letter-spacing:.06em;text-shadow:var(--title-shadow)}
   header .sub{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-top:6px}
 
   /* tabs */
